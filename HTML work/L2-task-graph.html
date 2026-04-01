@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L2 Task Graph — UK Grocery Retail</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0D0D0F; --card: #141416; --elevated: #1A1A1E; --border: #2A2A2E;
+  --text: #E8E8ED; --text-muted: #8B8B96; --text-dim: #5A5A64;
+  --green: #2D7A4F; --yellow: #D4A843; --orange: #E07A3A; --red: #E05252;
+  --accent: #5E6AD2;
+}
+html, body { height: 100%; font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+
+.top-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; height: 48px; background: rgba(13,13,15,0.94); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; gap: 16px; }
+.top-bar h1 { font-size: 14px; font-weight: 600; white-space: nowrap; }
+.top-bar h1 .subtitle { font-weight: 400; font-size: 12px; color: var(--text-muted); }
+
+.controls { display: flex; gap: 6px; margin-left: auto; align-items: center; }
+.control-group { display: flex; gap: 2px; background: var(--card); border-radius: 6px; border: 1px solid var(--border); overflow: hidden; }
+.ctrl-btn { padding: 4px 10px; font-size: 11px; font-weight: 500; color: var(--text-muted); cursor: pointer; border: none; background: transparent; transition: all 0.2s; font-family: inherit; white-space: nowrap; }
+.ctrl-btn:hover { color: var(--text); background: var(--elevated); }
+.ctrl-btn.active { color: #fff; background: var(--accent); }
+
+.role-filters { display: flex; gap: 4px; margin-left: 12px; align-items: center; }
+.role-filter { padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; cursor: pointer; border: 1.5px solid; transition: all 0.2s; font-family: inherit; }
+.role-filter.active { opacity: 1; }
+.role-filter:not(.active) { opacity: 0.35; }
+.role-filter:hover { opacity: 0.8; }
+
+.main-container { position: absolute; top: 48px; left: 0; right: 0; bottom: 0; display: flex; }
+.graph-area { flex: 1; position: relative; overflow: hidden; }
+.graph-area svg { width: 100%; height: 100%; }
+
+/* Detail Panel */
+.detail-panel { position: absolute; top: 0; right: 0; bottom: 0; width: 380px; background: var(--card); border-left: 1px solid var(--border); z-index: 50; transform: translateX(100%); transition: transform 0.3s ease; overflow-y: auto; padding: 20px; }
+.detail-panel.open { transform: translateX(0); }
+.detail-panel::-webkit-scrollbar { width: 5px; }
+.detail-panel::-webkit-scrollbar-track { background: transparent; }
+.detail-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.dp-close { position: absolute; top: 12px; right: 12px; width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+.dp-close:hover { background: var(--card); color: var(--text); }
+.dp-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; padding-right: 32px; line-height: 1.3; }
+.dp-domain { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+.dp-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; }
+.dp-row-label { color: var(--text-muted); }
+.dp-row-value { font-weight: 600; }
+.dp-section { margin-top: 16px; }
+.dp-section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-dim); margin-bottom: 8px; font-weight: 700; }
+.dp-role-entry { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+.dp-role-name { font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+.dp-indicators { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.dp-indicator { font-size: 10px; padding: 2px 6px; border-radius: 3px; font-weight: 500; }
+.dp-indicator.H { background: rgba(224,82,82,0.2); color: var(--red); }
+.dp-indicator.M { background: rgba(212,168,67,0.2); color: var(--yellow); }
+.dp-indicator.L { background: rgba(45,122,79,0.2); color: var(--green); }
+.dp-quote { font-size: 11px; font-style: italic; color: var(--text-muted); line-height: 1.5; border-left: 2px solid var(--border); padding-left: 8px; margin-top: 6px; }
+.dp-tools { display: flex; flex-wrap: wrap; gap: 4px; }
+.dp-tool-tag { padding: 2px 6px; border-radius: 3px; font-size: 10px; background: var(--card); border: 1px solid var(--border); color: var(--text-muted); }
+.dp-impact { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 12px; }
+.dp-impact-title { font-size: 11px; font-weight: 600; color: var(--accent); margin-bottom: 4px; }
+.dp-impact-text { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+
+/* Solution lens stats bar */
+.solution-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 44px; background: rgba(20,20,22,0.95); backdrop-filter: blur(8px); border-top: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; gap: 24px; transform: translateY(100%); transition: transform 0.3s; z-index: 40; }
+.solution-bar.visible { transform: translateY(0); }
+.solution-bar .sb-stat { font-size: 12px; color: var(--text-muted); }
+.solution-bar .sb-stat strong { color: var(--text); font-weight: 700; }
+.solution-bar .sb-reset { padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); font-size: 11px; cursor: pointer; font-family: inherit; margin-left: auto; }
+.solution-bar .sb-reset:hover { background: var(--elevated); color: var(--text); }
+
+/* Tooltip */
+.tooltip { position: fixed; z-index: 200; background: var(--elevated); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; pointer-events: none; opacity: 0; transition: opacity 0.12s; max-width: 300px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+.tooltip.visible { opacity: 1; }
+.tooltip .tt-name { font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+.tooltip .tt-row { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.tooltip .tt-quote { font-size: 10px; font-style: italic; color: var(--text-dim); margin-top: 5px; border-left: 2px solid var(--border); padding-left: 6px; line-height: 1.4; }
+
+/* Legend */
+.legend { position: absolute; bottom: 8px; left: 8px; background: rgba(20,20,22,0.9); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; z-index: 30; display: flex; align-items: center; gap: 10px; }
+.legend.shifted { bottom: 56px; }
+.legend-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); font-weight: 600; margin-bottom: 0; margin-right: 4px; }
+.legend-items { display: flex; gap: 8px; }
+.legend-item { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-muted); }
+.legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1>L2 Task Graph <span class="subtitle">· 79 tasks · 7 roles · UK Grocery Retail</span></h1>
+  <div class="controls">
+    <div class="control-group" id="viewModes">
+      <button class="ctrl-btn active" data-mode="pain" onclick="setViewMode('pain')">Pain</button>
+      <button class="ctrl-btn" data-mode="connectivity" onclick="setViewMode('connectivity')">Connectivity</button>
+      <button class="ctrl-btn" data-mode="automation" onclick="setViewMode('automation')">Automation</button>
+      <button class="ctrl-btn" data-mode="whitespace" onclick="setViewMode('whitespace')">Whitespace</button>
+    </div>
+    <div class="control-group">
+      <button class="ctrl-btn" id="solutionLensBtn" onclick="toggleSolutionLens()">Solution Lens</button>
+    </div>
+  </div>
+  <div class="role-filters" id="roleFilters"></div>
+</div>
+
+<div class="main-container">
+  <div class="graph-area" id="graphArea">
+    <svg id="graphSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="legend" id="legend">
+      <div class="legend-title" id="legendTitle">Emotional Cost</div>
+      <div class="legend-items" id="legendItems"></div>
+    </div>
+  </div>
+  <div class="detail-panel" id="detailPanel">
+    <button class="dp-close" onclick="closeDetail()">&times;</button>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
+<div class="solution-bar" id="solutionBar">
+  <div class="sb-stat">Solved: <strong id="sbSolved">0</strong> tasks</div>
+  <div class="sb-stat">Roles affected: <strong id="sbRoles">0</strong></div>
+  <div class="sb-stat">Downstream: <strong id="sbDownstream">0</strong></div>
+  <div class="sb-stat">Body budget recovered: <strong id="sbBudget">0</strong></div>
+  <button class="sb-reset" onclick="resetSolution()">Reset</button>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// ==================== ROLE DEFINITIONS ====================
+const ROLES = {
+  freshDM:     { name: "Fresh DM",     fullName: "Fresh Department Manager",     color: "#5E6AD2", salary: "22-42K", hours: "39-45 / 49-76 actual" },
+  groceryDM:   { name: "Grocery DM",   fullName: "Grocery/Ambient Dept Manager", color: "#7078E0", salary: "20-43K", hours: "39-45 / 35-50+ actual" },
+  checkout:    { name: "Checkout",      fullName: "Front End / Checkout Manager", color: "#2DA5A5", salary: "26-35K", hours: "45 / 52-83 actual" },
+  night:       { name: "Night",         fullName: "Night Manager",               color: "#9B6AD2", salary: "24-35K+", hours: "36 / 36 actual (extreme intensity)" },
+  dotcom:      { name: "Dotcom",        fullName: "Dotcom / Online Fulfilment",  color: "#D4A843", salary: "25-35K", hours: "40-45 / 50-65 actual" },
+  convenience: { name: "Convenience",   fullName: "Convenience Solo Manager",    color: "#E07A3A", salary: "27-41K", hours: "40-45 / 50-65+ actual" },
+  discount:    { name: "Discount",      fullName: "Discount Store Manager",      color: "#E05252", salary: "52-69K", hours: "50 / 56-80 actual" }
+};
+
+const ROLE_KEYS = Object.keys(ROLES);
+
+// ==================== DOMAIN DEFINITIONS ====================
+const DOMAINS = {
+  delivery:   { name: "Delivery & Receiving", color: "#6B8DD6" },
+  stock:      { name: "Stock & Fill",         color: "#7078E0" },
+  compliance: { name: "Compliance & Safety",  color: "#E05252" },
+  trading:    { name: "Trading & Customer",   color: "#D4A843" },
+  people:     { name: "People & Scheduling",  color: "#2D7A4F" },
+  admin:      { name: "Admin & Handover",     color: "#8B8B96" },
+  dotcomOps:  { name: "Dotcom Operations",    color: "#D4A843" },
+  checkout_d: { name: "Checkout & Queue",     color: "#2DA5A5" },
+  nightOps:   { name: "Night Operations",     color: "#9B6AD2" }
+};
+
+// ==================== TASK DATA ====================
+const TASKS = [
+  // --- DELIVERY domain ---
+  { id: "receiveDelivery", name: "Receive & verify delivery", domain: "delivery",
+    roles: {
+      freshDM:     { ec: "medium", bb: -4, u:"M",b:"M",i:"L",f:"M", quote: "Driver's got six more stores to do. He doesn't care about your temperature readings." },
+      groceryDM:   { ec: "medium", bb: -4, u:"M",b:"M",i:"L",f:"M", quote: "Shortages not caught at delivery become stock-outs nobody can explain." },
+      night:       { ec: "high",   bb: -7, u:"H",b:"H",i:"L",f:"H", quote: "Driver arrives late, pushes entire schedule back. Cage count doesn't match." },
+      convenience: { ec: "extreme",bb: -10,u:"H",b:"H",i:"H",f:"H", quote: "10-15 cages and struggling to stay afloat. Each cage 200-400kg. Feeling of drowning." },
+      discount:    { ec: "extreme",bb: -10,u:"H",b:"H",i:"M",f:"H", quote: "You will rise at five, be in by six, throw a load for three dreadful hours. Pallets weigh 300-500kg." }
+    },
+    frequency: "Daily", avgDuration: 40, automationReadiness: 2, noToolExists: false,
+    currentTools: ["Delivery manifest","Handheld scanner","Pump truck"],
+    topQuote: "10-15 cages and struggling to stay afloat. Each cage 200-400kg. Feeling of drowning."
+  },
+  { id: "tempCheckDelivery", name: "Temperature-check delivered goods", domain: "delivery",
+    roles: {
+      freshDM:     { ec: "medium", bb: -3, u:"M",b:"M",i:"L",f:"M", quote: "Driver's got six more stores to do." },
+      night:       { ec: "high",   bb: -5, u:"H",b:"H",i:"M",f:"M", quote: "Legal liability. Rejecting delivery means empty shelves tomorrow." },
+      convenience: { ec: "high",   bb: -5, u:"H",b:"H",i:"H",f:"L", quote: "A failed temperature check at 5:45am means immediate decisions about stock disposal with no one to consult." },
+      discount:    { ec: "high",   bb: -4, u:"H",b:"H",i:"M",f:"L", quote: "A failed temperature check at 5:30am means immediate decision about thousands of pounds of stock." }
+    },
+    frequency: "Daily", avgDuration: 15, automationReadiness: 3.5, noToolExists: false,
+    currentTools: ["Probe thermometer","Temperature log","HACCP form"],
+    topQuote: "Legal liability. Rejecting delivery means empty shelves tomorrow."
+  },
+  { id: "inspectQuality", name: "Inspect delivery quality & date codes", domain: "delivery",
+    roles: {
+      freshDM:  { ec: "medium", bb: -3, u:"M",b:"M",i:"L",f:"M", quote: "You reject the delivery, tomorrow's shelves are empty. You accept rubbish quality, the area manager walks in and you're done." },
+      groceryDM:{ ec: "medium", bb: -3, u:"M",b:"M",i:"L",f:"M", quote: "Quality control at 6am with no backup." }
+    },
+    frequency: "Daily", avgDuration: 25, automationReadiness: 1.5, noToolExists: false,
+    currentTools: ["Visual inspection","Quality spec guides","Date code reference"],
+    topQuote: "You reject the delivery, tomorrow's shelves are empty."
+  },
+  { id: "reconcileDelivery", name: "Reconcile delivery note vs order", domain: "delivery",
+    roles: {
+      freshDM:  { ec: "low", bb: -1, u:"L",b:"L",i:"L",f:"L", quote: "Shortages not caught at delivery become stock-outs nobody can explain." },
+      groceryDM:{ ec: "low", bb: -1, u:"L",b:"L",i:"L",f:"L", quote: "Digital claims system is most streamlined at Tesco." }
+    },
+    frequency: "Daily", avgDuration: 15, automationReadiness: 3, noToolExists: false,
+    currentTools: ["Delivery note","Ordering system","Handheld scanner"],
+    topQuote: "Shortages not caught at delivery become stock-outs nobody can explain."
+  },
+  { id: "sortCages", name: "Sort & move cages to aisles/warehouse", domain: "delivery",
+    roles: {
+      groceryDM:{ ec: "medium", bb: -4, u:"M",b:"M",i:"L",f:"H", quote: "Full warehouse, no good options." },
+      night:    { ec: "medium", bb: -3, u:"M",b:"M",i:"L",f:"M", quote: "20-40 min of physical sorting every night." }
+    },
+    frequency: "Daily", avgDuration: 30, automationReadiness: 0.5, noToolExists: true,
+    currentTools: ["Cage labels","Warehouse markers","Cage mover"],
+    topQuote: "Full warehouse, no good options."
+  },
+  { id: "reviewDeliverySchedule", name: "Review delivery schedule & cage count", domain: "delivery",
+    roles: {
+      night: { ec: "medium", bb: -2, u:"H",b:"L",i:"L",f:"L", quote: "Uncertainty about workload before staff arrive." }
+    },
+    frequency: "Nightly", avgDuration: 10, automationReadiness: 2, noToolExists: false,
+    currentTools: ["Store system","Delivery manifest"],
+    topQuote: "Uncertainty about workload before staff arrive."
+  },
+  { id: "organiseWarehouse", name: "Sort & organise warehouse/backroom", domain: "delivery",
+    roles: {
+      groceryDM:{ ec: "medium", bb: -4, u:"M",b:"M",i:"L",f:"H", quote: "Full warehouse, no good options." },
+      discount: { ec: "medium", bb: -4, u:"M",b:"H",i:"L",f:"H", quote: "Can't move in the warehouse without moving 6 pallets first." }
+    },
+    frequency: "Daily", avgDuration: 25, automationReadiness: 0.5, noToolExists: true,
+    currentTools: ["Pump truck","Roller cages","Pallet racking"],
+    topQuote: "Can't move in the warehouse without moving 6 pallets first."
+  },
+
+  // --- STOCK domain ---
+  { id: "workStock", name: "Work stock to shelves (fill, rotate, FIFO)", domain: "stock",
+    roles: {
+      freshDM:     { ec: "medium", bb: -5, u:"L",b:"H",i:"L",f:"H", quote: "Staff stack new on top of old because it's faster. Then a customer finds something three days past use-by." },
+      groceryDM:   { ec: "high",   bb: -7, u:"M",b:"H",i:"M",f:"H", quote: "Pushing unworked cages to the warehouse feels like defeat." },
+      night:       { ec: "high",   bb: -6, u:"L",b:"H",i:"M",f:"H", quote: "End-of-shift fatigue. This is the visual standard the day team judges you on." },
+      convenience: { ec: "high",   bb: -8, u:"L",b:"H",i:"H",f:"H", quote: "Monotonous physical labour that feels beneath the manager title." },
+      discount:    { ec: "high",   bb: -10,u:"M",b:"H",i:"H",f:"H", quote: "As the Store Manager you are expected to throw pallets for produce, then do your admin." }
+    },
+    frequency: "Daily", avgDuration: 90, automationReadiness: 1, noToolExists: true,
+    currentTools: ["Roll cages","Step stool","Hands"],
+    topQuote: "Staff stack new on top of old because it's faster."
+  },
+  { id: "gapWalk", name: "Walk aisles/department for gaps", domain: "stock",
+    roles: {
+      freshDM:  { ec: "medium", bb: -3, u:"M",b:"H",i:"L",f:"M", quote: "The morning walk tells you exactly how bad your day is going to be." },
+      groceryDM:{ ec: "high",   bb: -6, u:"H",b:"H",i:"H",f:"M", quote: "The gap walk is grading the night team's homework each morning. A bad walk means the day is already lost." },
+      night:    { ec: "medium", bb: -3, u:"M",b:"M",i:"M",f:"M", quote: "Expected to be visible on the shop floor, not in the office." }
+    },
+    frequency: "Daily", avgDuration: 35, automationReadiness: 3, noToolExists: false,
+    currentTools: ["Visual inspection","Zebra handheld","Focal Systems (Morrisons)"],
+    topQuote: "The gap walk is grading the night team's homework each morning."
+  },
+  { id: "gapScanning", name: "Gap scanning for PI correction", domain: "stock",
+    roles: {
+      groceryDM:{ ec: "medium", bb: -4, u:"H",b:"M",i:"L",f:"H", quote: "60% of inventory records are inaccurate. Gap scanning is trying to fix a broken system one barcode at a time." }
+    },
+    frequency: "Daily", avgDuration: 30, automationReadiness: 3.5, noToolExists: false,
+    currentTools: ["Handheld scanner","PI system"],
+    topQuote: "60% of inventory records are inaccurate."
+  },
+  { id: "kisLines", name: "Manage KIS lines & persistent OOS", domain: "stock",
+    roles: {
+      groceryDM:{ ec: "medium", bb: -3, u:"H",b:"M",i:"L",f:"M", quote: "Same five products out of stock every week. System says we have them. We don't." }
+    },
+    frequency: "Daily", avgDuration: 20, automationReadiness: 2.5, noToolExists: false,
+    currentTools: ["PI system","Ordering system","Supplier contact"],
+    topQuote: "Same five products out of stock every week."
+  },
+  { id: "dateCodeCheck", name: "Date code checking & expired stock pull", domain: "stock",
+    roles: {
+      freshDM:  { ec: "medium", bb: -3, u:"M",b:"H",i:"L",f:"M", quote: "The morning walk tells you exactly how bad your day is going to be." },
+      groceryDM:{ ec: "medium", bb: -4, u:"M",b:"H",i:"M",f:"M", quote: "Finding LIFO stacking means pulling all product forward to rotate." },
+      night:    { ec: "medium", bb: -4, u:"L",b:"H",i:"L",f:"H", quote: "Tedious, repetitive, but legally critical." }
+    },
+    frequency: "2-3x daily", avgDuration: 30, automationReadiness: 1.5, noToolExists: false,
+    currentTools: ["Visual inspection","Date codes","Waste trolley"],
+    topQuote: "Tedious, repetitive, but legally critical."
+  },
+  { id: "faceUp", name: "Face-up (fronting) entire store", domain: "stock",
+    roles: {
+      night: { ec: "high", bb: -6, u:"L",b:"H",i:"M",f:"H", quote: "End-of-shift fatigue. This is the visual standard the day team judges you on." }
+    },
+    frequency: "Nightly", avgDuration: 75, automationReadiness: 0, noToolExists: true,
+    currentTools: ["Hands only"],
+    topQuote: "This is the visual standard the day team judges you on."
+  },
+  { id: "clearCages", name: "Clear cages/cardboard from floor", domain: "stock",
+    roles: {
+      groceryDM:{ ec: "high", bb: -7, u:"M",b:"H",i:"M",f:"H", quote: "Pushing unworked cages to the warehouse feels like defeat." },
+      night:    { ec: "medium", bb: -4, u:"L",b:"M",i:"L",f:"H", quote: "Physical exhaustion. Floor must be clear before doors open." }
+    },
+    frequency: "Daily", avgDuration: 40, automationReadiness: 0, noToolExists: true,
+    currentTools: ["Roll cages","Baler","Waste compactor"],
+    topQuote: "Floor must be clear before doors open."
+  },
+  { id: "planogramExec", name: "Execute planogram / display build", domain: "stock",
+    roles: {
+      groceryDM:{ ec: "high", bb: -6, u:"H",b:"H",i:"M",f:"H", quote: "Strip and rebuild gondola ends. Promo failure certainty." }
+    },
+    frequency: "Weekly", avgDuration: 240, automationReadiness: 1, noToolExists: true,
+    currentTools: ["Paper planogram","Manual fixtures"],
+    topQuote: "Promo failure certainty."
+  },
+  { id: "reviewOrders", name: "Review automated replenishment orders", domain: "stock",
+    roles: {
+      freshDM:  { ec: "medium", bb: -3, u:"M",b:"M",i:"L",f:"H", quote: "Admin gets squeezed into the last 30 minutes when you can barely think straight." },
+      groceryDM:{ ec: "medium", bb: -3, u:"H",b:"M",i:"L",f:"M", quote: "The system is opaque. I know something is wrong but understanding why is beyond me." }
+    },
+    frequency: "Daily", avgDuration: 25, automationReadiness: 4, noToolExists: false,
+    currentTools: ["Blue Yonder ASR","Back-office terminal"],
+    topQuote: "The system is opaque."
+  },
+
+  // --- COMPLIANCE domain ---
+  { id: "tempMonitoring", name: "Monitor cabinet/storage temperatures", domain: "compliance",
+    roles: {
+      freshDM:     { ec: "medium", bb: -3, u:"M",b:"H",i:"L",f:"L", quote: "If you miss a temp check and EHO walks in, it's your name on the prosecution. Not the company's. Yours." },
+      night:       { ec: "high",   bb: -5, u:"H",b:"H",i:"M",f:"M", quote: "Legal liability. Physical discomfort at -25C." },
+      convenience: { ec: "high",   bb: -5, u:"H",b:"H",i:"H",f:"L", quote: "A failed temperature check at 5:45am means immediate decisions about stock disposal with no one to consult." },
+      discount:    { ec: "high",   bb: -4, u:"H",b:"H",i:"M",f:"L", quote: "A failed temperature check at 5:30am means immediate decision about thousands of pounds of stock." },
+      dotcom:      { ec: "medium", bb: -4, u:"M",b:"H",i:"L",f:"H", quote: "Cold chain compliance depends on correct loading." }
+    },
+    frequency: "2-4x daily", avgDuration: 25, automationReadiness: 3.5, noToolExists: false,
+    currentTools: ["Probe thermometer","Checkit/Delphi","HACCP log"],
+    topQuote: "If you miss a temp check and EHO walks in, it's your name on the prosecution."
+  },
+  { id: "tempBreach", name: "Investigate temperature breach alert", domain: "compliance",
+    roles: {
+      freshDM: { ec: "extreme", bb: -10, u:"H",b:"H",i:"H",f:"M", quote: "A chiller fails and suddenly you're deciding the fate of thousands of pounds of stock with no one to ask." }
+    },
+    frequency: "Event-driven", avgDuration: 30, automationReadiness: 2, noToolExists: false,
+    currentTools: ["Temp monitoring alerts","Probe","HACCP corrective action form","Maintenance call"],
+    topQuote: "A chiller fails and suddenly you're deciding the fate of thousands of pounds of stock."
+  },
+  { id: "foodSafety", name: "Food safety compliance (HACCP, cleaning)", domain: "compliance",
+    roles: {
+      freshDM:     { ec: "high",   bb: -4, u:"M",b:"H",i:"L",f:"M", quote: "Food safety liability sits personally with me." },
+      convenience: { ec: "high",   bb: -5, u:"H",b:"H",i:"H",f:"M", quote: "Food safety liability sits personally with me. Getting this wrong means prosecution risk." },
+      discount:    { ec: "high",   bb: -4, u:"H",b:"H",i:"M",f:"M", quote: "HACCP compliance is a core SM accountability." }
+    },
+    frequency: "Multiple daily", avgDuration: 30, automationReadiness: 2, noToolExists: false,
+    currentTools: ["Cleaning schedule","HACCP logs","mpro5 (Tesco)"],
+    topQuote: "Food safety liability sits personally with me."
+  },
+  { id: "ageVerification", name: "Approve age-restricted sales (Challenge 25)", domain: "compliance",
+    roles: {
+      checkout:    { ec: "extreme", bb: -12, u:"H",b:"H",i:"H",f:"H", quote: "Criminal liability on every decision. Staff told 'I'll wait for you outside.' Every refusal is a potential violence trigger." },
+      convenience: { ec: "extreme", bb: -10, u:"H",b:"H",i:"H",f:"H", quote: "1.2 million incidents of verbal abuse per year. Personal criminal liability." }
+    },
+    frequency: "50% of SCO interventions", avgDuration: 1, automationReadiness: 2, noToolExists: false,
+    currentTools: ["Staff override badge","SCO terminal","Challenge 25","CCTV"],
+    topQuote: "Criminal liability on every decision."
+  },
+  { id: "scoFraud", name: "Monitor SCO for non-scanning/fraud", domain: "compliance",
+    roles: {
+      checkout:    { ec: "high", bb: -6, u:"H",b:"H",i:"M",f:"H", quote: "SCO shrinkage at 3.5-4% and I carry responsibility." },
+      convenience: { ec: "high", bb: -5, u:"H",b:"H",i:"M",f:"H", quote: "Manager becomes de facto security guard without security training." }
+    },
+    frequency: "Continuous", avgDuration: 45, automationReadiness: 3, noToolExists: false,
+    currentTools: ["SCO monitoring screen","Analytics software","Body-worn cameras"],
+    topQuote: "SCO shrinkage at 3.5-4% and I carry responsibility."
+  },
+  { id: "prepFloats", name: "Prepare & distribute till floats", domain: "compliance",
+    roles: {
+      checkout:    { ec: "high",   bb: -4, u:"M",b:"H",i:"M",f:"L", quote: "Personal liability for cash. Discrepancies above ten quid trigger formal investigation." },
+      convenience: { ec: "high",   bb: -3, u:"M",b:"H",i:"M",f:"L", quote: "Cash discrepancies above threshold trigger investigation. Every penny tracked." },
+      discount:    { ec: "high",   bb: -4, u:"M",b:"H",i:"M",f:"L", quote: "Personal cash accountability. Every penny tracked." }
+    },
+    frequency: "Daily", avgDuration: 15, automationReadiness: 3.5, noToolExists: false,
+    currentTools: ["Store safe","Cash counting","SMARTtill","Glory recyclers"],
+    topQuote: "Personal liability for cash."
+  },
+  { id: "cashRecon", name: "Cash reconciliation (mid/end shift)", domain: "compliance",
+    roles: {
+      checkout:    { ec: "medium", bb: -3, u:"M",b:"H",i:"L",f:"H", quote: "Cash discrepancies haunt you. Every penny is tracked." },
+      convenience: { ec: "medium", bb: -3, u:"M",b:"H",i:"L",f:"H", quote: "Counted out, every shift." },
+      discount:    { ec: "high",   bb: -4, u:"M",b:"H",i:"M",f:"H", quote: "End-of-day cash reconciliation. Personal liability never stops." }
+    },
+    frequency: "1-2x daily", avgDuration: 25, automationReadiness: 4, noToolExists: false,
+    currentTools: ["SMARTtill","Safe","Cash counting","Z Reports"],
+    topQuote: "Cash discrepancies haunt you."
+  },
+  { id: "securityRound", name: "Conduct security round (perimeter, CCTV)", domain: "compliance",
+    roles: {
+      night:       { ec: "high", bb: -5, u:"H",b:"H",i:"M",f:"H", quote: "Isolation and physical vulnerability. 2am external round in winter, alone. You ARE the security." },
+      convenience: { ec: "high", bb: -5, u:"H",b:"H",i:"H",f:"H", quote: "Anxiety on approach. Is the store intact?" },
+      discount:    { ec: "medium",bb: -2, u:"M",b:"L",i:"L",f:"L", quote: "Arriving alone at 5am in darkness." }
+    },
+    frequency: "2-3x per shift", avgDuration: 15, automationReadiness: 1, noToolExists: false,
+    currentTools: ["Torch","Keys","CCTV monitor","Security log"],
+    topQuote: "You ARE the security."
+  },
+  { id: "powerUpSCO", name: "Power up & test SCO units", domain: "checkout_d",
+    roles: {
+      checkout: { ec: "medium", bb: -3, u:"M",b:"M",i:"L",f:"L", quote: "Three units down at once with 30 minutes to opening and you're in a different world." }
+    },
+    frequency: "Daily", avgDuration: 20, automationReadiness: 3, noToolExists: false,
+    currentTools: ["NCR SelfServ","Diebold Nixdorf","Verifone terminals"],
+    topQuote: "Three units down at once with 30 minutes to opening."
+  },
+  { id: "openingChecklist", name: "Complete safe-and-legal opening checklist", domain: "compliance",
+    roles: {
+      convenience: { ec: "high", bb: -5, u:"H",b:"H",i:"H",f:"L", quote: "A failed temperature check at 5:45am means immediate decisions about stock disposal with no one to consult." },
+      discount:    { ec: "high", bb: -4, u:"H",b:"H",i:"M",f:"L", quote: "A failed temperature check at 5:30am means immediate decision about thousands of pounds of stock." }
+    },
+    frequency: "Daily", avgDuration: 20, automationReadiness: 2, noToolExists: false,
+    currentTools: ["Opening checklist","Temp probe","Store standards guide"],
+    topQuote: "Failed temperature check means immediate decisions about stock disposal."
+  },
+
+  // --- TRADING domain ---
+  { id: "markdownExec", name: "Execute markdown/reduction (short-dated)", domain: "trading",
+    roles: {
+      freshDM:     { ec: "high",   bb: -6, u:"H",b:"H",i:"M",f:"M", quote: "Every item is a bet. Too much discount, you lose margin. Too little, it wastes." },
+      convenience: { ec: "high",   bb: -5, u:"H",b:"H",i:"M",f:"M", quote: "Every item is a micro-decision. Waste KPI is personally accountable." },
+      discount:    { ec: "medium", bb: -3, u:"M",b:"H",i:"L",f:"M", quote: "Waste targets are a core SM KPI." }
+    },
+    frequency: "2-3x daily", avgDuration: 30, automationReadiness: 2.5, noToolExists: false,
+    currentTools: ["Handheld markdown app","Reduction stickers","Pricing algorithm"],
+    topQuote: "Every item is a bet."
+  },
+  { id: "processWaste", name: "Process waste & log disposals", domain: "trading",
+    roles: {
+      freshDM:     { ec: "medium", bb: -3, u:"L",b:"M",i:"M",f:"M", quote: "Throwing away perfectly good food because it passed an arbitrary date." },
+      convenience: { ec: "medium", bb: -3, u:"M",b:"M",i:"L",f:"H", quote: "Reduce or waste. The judgment never stops." }
+    },
+    frequency: "Daily", avgDuration: 20, automationReadiness: 2.5, noToolExists: false,
+    currentTools: ["Waste log","Scanner","FareShare/Olio system"],
+    topQuote: "Throwing away perfectly good food."
+  },
+  { id: "foodToGo", name: "Set up food-to-go display (breakfast/lunch)", domain: "trading",
+    roles: {
+      convenience: { ec: "extreme", bb: -8, u:"H",b:"H",i:"H",f:"H", quote: "Peak stress moment. Revenue walking past the store right now." },
+      discount:    { ec: "low",     bb: -1, u:"L",b:"L",i:"L",f:"L", quote: "Lidl's croissant sells 122 per minute nationwide." }
+    },
+    frequency: "2-3x daily", avgDuration: 20, automationReadiness: 1.5, noToolExists: false,
+    currentTools: ["Hot hold unit","Temp probe","Food safety log"],
+    topQuote: "Peak stress moment. Revenue walking past the store right now."
+  },
+  { id: "promoChangeover", name: "Promotional changeover execution", domain: "trading",
+    roles: {
+      groceryDM:{ ec: "high", bb: -6, u:"H",b:"H",i:"M",f:"H", quote: "Promotional ordering is a bet. Too much stock and warehouse chaos for weeks." },
+      discount: { ec: "high", bb: -6, u:"H",b:"H",i:"M",f:"H", quote: "Customers queue before opening on Specialbuys day. Entire middle aisle transforms twice a week." }
+    },
+    frequency: "Weekly / 2x week", avgDuration: 60, automationReadiness: 2, noToolExists: false,
+    currentTools: ["Promo planner","Planogram","Price labels/ESLs","POS material"],
+    topQuote: "Promotional ordering is a bet."
+  },
+  { id: "specialbuys", name: "Specialbuys / Middle of Lidl changeover", domain: "trading",
+    roles: {
+      discount: { ec: "high", bb: -6, u:"H",b:"H",i:"M",f:"H", quote: "Customers queue before opening on Specialbuys day." }
+    },
+    frequency: "2x weekly", avgDuration: 45, automationReadiness: 1, noToolExists: true,
+    currentTools: ["Changeover plan","Fixtures","Signage","Security tags"],
+    topQuote: "Entire middle aisle transforms twice a week."
+  },
+  { id: "scoWeightError", name: "Resolve SCO weight mismatch errors", domain: "checkout_d",
+    roles: {
+      checkout: { ec: "high", bb: -5, u:"M",b:"M",i:"M",f:"H", quote: "Every intervention is a potential confrontation." }
+    },
+    frequency: "Continuous", avgDuration: 45, automationReadiness: 4, noToolExists: false,
+    currentTools: ["SCO attendant terminal","NCR management console"],
+    topQuote: "Every intervention is a potential confrontation."
+  },
+  { id: "paymentFail", name: "Handle payment failures at SCO", domain: "checkout_d",
+    roles: {
+      checkout: { ec: "medium", bb: -3, u:"M",b:"L",i:"L",f:"M", quote: "Customer embarrassed by a declined card and blames you." }
+    },
+    frequency: "Multiple daily", avgDuration: 5, automationReadiness: 3, noToolExists: false,
+    currentTools: ["SCO terminal","Verifone/Ingenico","Cash acceptor"],
+    topQuote: "Customer embarrassed by a declined card and blames you."
+  },
+  { id: "laneSwitching", name: "Manage express/basket lane switching", domain: "checkout_d",
+    roles: {
+      checkout: { ec: "low", bb: -1, u:"L",b:"L",i:"L",f:"M", quote: "Customers ignore express lane limits. Argue about it. Every day." }
+    },
+    frequency: "Multiple daily", avgDuration: 10, automationReadiness: 2, noToolExists: false,
+    currentTools: ["Lane signage","POS config","Queue barriers"],
+    topQuote: "Customers ignore express lane limits."
+  },
+
+  // --- PEOPLE domain ---
+  { id: "buildRota", name: "Build & publish staff rota/schedule", domain: "people",
+    roles: {
+      checkout:    { ec: "high",   bb: -5, u:"H",b:"M",i:"M",f:"L", quote: "Starts the day with a staffing problem on most days." },
+      convenience: { ec: "extreme",bb: -8, u:"H",b:"H",i:"H",f:"H", quote: "One sick call eliminates 25-50% of capacity." },
+      discount:    { ec: "extreme",bb: -8, u:"H",b:"H",i:"H",f:"H", quote: "Rota impossibility. Scheduling is the #1 pain." },
+      dotcom:      { ec: "high",   bb: -5, u:"H",b:"H",i:"M",f:"L", quote: "One picker absence means 60-80 fewer items per hour." }
+    },
+    frequency: "Weekly", avgDuration: 75, automationReadiness: 3.5, noToolExists: false,
+    currentTools: ["UKG/Kronos WFM","Paper rota","Excel"],
+    topQuote: "One sick call eliminates 25-50% of capacity."
+  },
+  { id: "coverAbsence", name: "Cover staff absence at short notice", domain: "people",
+    roles: {
+      checkout:    { ec: "high",   bb: -5, u:"H",b:"M",i:"M",f:"L", quote: "Starts the day with a staffing problem on most days." },
+      convenience: { ec: "extreme",bb: -10,u:"H",b:"H",i:"H",f:"H", quote: "One sick call eliminates 25-50% of capacity." },
+      discount:    { ec: "extreme",bb: -8, u:"H",b:"H",i:"H",f:"H", quote: "Cover staff absence is a constant crisis." },
+      dotcom:      { ec: "high",   bb: -5, u:"H",b:"H",i:"M",f:"L", quote: "One picker absence means 60-80 fewer items per hour." },
+      night:       { ec: "extreme",bb: -8, u:"H",b:"H",i:"H",f:"L", quote: "No-shows discovered after handover. No contingency." }
+    },
+    frequency: "2-5x weekly", avgDuration: 30, automationReadiness: 2, noToolExists: true,
+    currentTools: ["WhatsApp","Phone calls","Personal contacts"],
+    topQuote: "No-shows discovered after handover. No contingency."
+  },
+  { id: "deployTeam", name: "Deploy/brief team for shift tasks", domain: "people",
+    roles: {
+      freshDM:  { ec: "medium", bb: -3, u:"M",b:"L",i:"H",f:"L", quote: "Must project control even when understaffed." },
+      groceryDM:{ ec: "high",   bb: -4, u:"H",b:"M",i:"H",f:"L", quote: "I must allocate 3-6 people to work that really needs 10-15." },
+      night:    { ec: "high",   bb: -5, u:"H",b:"H",i:"H",f:"M", quote: "Getting allocation wrong causes resentment. No digital tool for this." },
+      dotcom:   { ec: "low",    bb: -1, u:"L",b:"L",i:"L",f:"L", quote: "Must project control even when understaffed." }
+    },
+    frequency: "Per shift", avgDuration: 15, automationReadiness: 1.5, noToolExists: true,
+    currentTools: ["Verbal briefing","Whiteboard","YOOBIC (some)"],
+    topQuote: "I must allocate 3-6 people to work that really needs 10-15."
+  },
+  { id: "coachStaff", name: "Coach staff on quality/performance", domain: "people",
+    roles: {
+      freshDM:  { ec: "high", bb: -4, u:"M",b:"L",i:"H",f:"M", quote: "You tell someone they're not rotating stock properly and they look at you like you've insulted their mother." },
+      groceryDM:{ ec: "high", bb: -4, u:"M",b:"M",i:"H",f:"M", quote: "Being the person who always complains about the night shift is socially costly." },
+      night:    { ec: "high", bb: -5, u:"M",b:"L",i:"H",f:"H", quote: "Isolated role with no HR support overnight. Fear of grievance." },
+      checkout: { ec: "medium",bb:-3, u:"M",b:"M",i:"L",f:"H", quote: "Brief the evening team, hand over the problems." }
+    },
+    frequency: "Ongoing", avgDuration: 15, automationReadiness: 0.5, noToolExists: true,
+    currentTools: ["Verbal coaching","Quality standards guide"],
+    topQuote: "Isolated role with no HR support overnight."
+  },
+  { id: "manageCounter", name: "Manage counter staff & rota adjustments", domain: "people",
+    roles: {
+      freshDM: { ec: "high", bb: -5, u:"H",b:"M",i:"H",f:"M", quote: "One no-show and the deli counter closes. Customers blame you." }
+    },
+    frequency: "Daily", avgDuration: 20, automationReadiness: 2, noToolExists: false,
+    currentTools: ["Rota system","WhatsApp group","Phone"],
+    topQuote: "One no-show and the deli counter closes."
+  },
+  { id: "nightIssues", name: "Report night shift issues to Store Manager", domain: "people",
+    roles: {
+      groceryDM:{ ec: "high", bb: -4, u:"M",b:"M",i:"H",f:"M", quote: "Being the person who always complains about the night shift is socially costly." }
+    },
+    frequency: "Daily", avgDuration: 10, automationReadiness: 1, noToolExists: true,
+    currentTools: ["Email","Morning meeting"],
+    topQuote: "Being the person who always complains about the night shift is socially costly."
+  },
+  { id: "callCheckout", name: "Call additional staff to checkouts", domain: "people",
+    roles: {
+      checkout: { ec: "high", bb: -5, u:"M",b:"H",i:"H",f:"M", quote: "You're asking peers to sacrifice their team." }
+    },
+    frequency: "Multiple daily", avgDuration: 10, automationReadiness: 2, noToolExists: false,
+    currentTools: ["PA system","Walkie-talkie","Irisys alerts"],
+    topQuote: "You're asking peers to sacrifice their team."
+  },
+
+  // --- CUSTOMER domain ---
+  { id: "checkoutCover", name: "Respond to checkout cover call", domain: "trading",
+    roles: {
+      freshDM:  { ec: "high", bb: -5, u:"L",b:"M",i:"H",f:"H", quote: "My team spend more time supporting checkouts than doing their own job role." },
+      groceryDM:{ ec: "high", bb: -5, u:"L",b:"M",i:"H",f:"H", quote: "My team spend more time supporting checkouts than doing their own job role." }
+    },
+    frequency: "1-3x daily", avgDuration: 25, automationReadiness: 1, noToolExists: true,
+    currentTools: ["PA system","Till login"],
+    topQuote: "I'm supposed to manage Fresh but I'm scanning baked beans."
+  },
+  { id: "complaints", name: "Process customer complaints & refunds", domain: "trading",
+    roles: {
+      checkout:    { ec: "high",   bb: -5, u:"M",b:"M",i:"H",f:"H", quote: "The customer is always right, except when they're stealing, lying, or screaming at your 18-year-old cashier." },
+      convenience: { ec: "medium", bb: -3, u:"M",b:"M",i:"M",f:"H", quote: "SM handles it personally because there's nobody else." },
+      discount:    { ec: "medium", bb: -3, u:"M",b:"L",i:"M",f:"M", quote: "SM handles it personally because there's nobody else." },
+      dotcom:      { ec: "medium", bb: -3, u:"M",b:"M",i:"L",f:"H", quote: "End of shift admin. Review the damage." }
+    },
+    frequency: "10-30/day", avgDuration: 20, automationReadiness: 2, noToolExists: false,
+    currentTools: ["Refund system","Complaint log","Customer service desk"],
+    topQuote: "The customer is always right, except when they're stealing."
+  },
+  { id: "shoplifting", name: "Handle shoplifting / aggressive customer", domain: "trading",
+    roles: {
+      convenience: { ec: "extreme", bb: -12, u:"H",b:"M",i:"H",f:"H", quote: "I refused to serve an energy drink to a young person and a group said they'd wait outside for me after work." },
+      checkout:    { ec: "extreme", bb: -10, u:"H",b:"H",i:"H",f:"H", quote: "Physical security incidents. Life-threatening; weapons in 36 daily incidents nationally." }
+    },
+    frequency: "Event-driven", avgDuration: 20, automationReadiness: 1, noToolExists: false,
+    currentTools: ["CCTV","Body-worn camera","Incident log","999"],
+    topQuote: "I refused to serve an energy drink and a group said they'd wait outside."
+  },
+  { id: "pickAndPack", name: "Pick & pack delivery orders (Uber/Deliveroo)", domain: "trading",
+    roles: {
+      convenience: { ec: "high", bb: -5, u:"H",b:"M",i:"M",f:"H", quote: "Three demands, one person." }
+    },
+    frequency: "5-30+/day", avgDuration: 8, automationReadiness: 2, noToolExists: false,
+    currentTools: ["Uber Eats tablet","Deliveroo tablet","Just Eat tablet"],
+    topQuote: "Three demands, one person."
+  },
+  { id: "serveOverflow", name: "Serve customers at till (queue overflow)", domain: "trading",
+    roles: {
+      convenience: { ec: "high", bb: -5, u:"L",b:"L",i:"H",f:"H", quote: "Every minute on the till is a minute not doing scheduling, compliance, or admin." },
+      discount:    { ec: "high", bb: -6, u:"L",b:"H",i:"H",f:"H", quote: "Scanning speed target 1,000-1,200 items per hour. Three speed failures means potential dismissal." }
+    },
+    frequency: "Multiple daily", avgDuration: 50, automationReadiness: 1, noToolExists: true,
+    currentTools: ["EPoS till","Scanner","Payment terminal"],
+    topQuote: "Scanning speed target 1,000-1,200 items/hr. Three failures means dismissal."
+  },
+  { id: "deescalate", name: "De-escalate abusive customers", domain: "trading",
+    roles: {
+      checkout:    { ec: "extreme", bb: -10, u:"H",b:"H",i:"H",f:"H", quote: "56% of customers won't return after a bad queuing experience. Saturday lunch is a war zone." },
+      convenience: { ec: "extreme", bb: -8,  u:"H",b:"H",i:"H",f:"H", quote: "1.2 million incidents of verbal abuse per year." }
+    },
+    frequency: "2-8/day", avgDuration: 10, automationReadiness: 0.5, noToolExists: true,
+    currentTools: ["Training","Body-worn cameras"],
+    topQuote: "Saturday lunch is a war zone."
+  },
+
+  // --- DOTCOM-SPECIFIC domain ---
+  { id: "reviewOrders_dc", name: "Review order volume & delivery slots", domain: "dotcomOps",
+    roles: {
+      dotcom: { ec: "medium", bb: -2, u:"M",b:"L",i:"L",f:"L", quote: "High-volume days trigger immediate stress about staffing." }
+    },
+    frequency: "Daily", avgDuration: 15, automationReadiness: 4, noToolExists: false,
+    currentTools: ["Transcend dashboard","StrongPoint","Store Assist"],
+    topQuote: "High-volume days trigger immediate stress."
+  },
+  { id: "planPickWave", name: "Plan pick wave schedule & assign zones", domain: "dotcomOps",
+    roles: {
+      dotcom: { ec: "medium", bb: -3, u:"M",b:"M",i:"L",f:"L", quote: "Balancing 3-5 variables simultaneously." }
+    },
+    frequency: "Daily", avgDuration: 15, automationReadiness: 4, noToolExists: false,
+    currentTools: ["Pick wave module","Zone knowledge"],
+    topQuote: "Balancing 3-5 variables simultaneously."
+  },
+  { id: "launchPickWave", name: "Launch pick waves & monitor picker rates", domain: "dotcomOps",
+    roles: {
+      dotcom: { ec: "high", bb: -7, u:"H",b:"H",i:"M",f:"M", quote: "Constant vigilance between coaching and pressure." }
+    },
+    frequency: "Continuous", avgDuration: 90, automationReadiness: 3.5, noToolExists: false,
+    currentTools: ["Picking system","Real-time dashboard","Handheld messaging"],
+    topQuote: "Constant vigilance between coaching and pressure."
+  },
+  { id: "substitutions", name: "Resolve substitution queries", domain: "dotcomOps",
+    roles: {
+      dotcom: { ec: "high", bb: -6, u:"H",b:"H",i:"M",f:"M", quote: "Every bad substitution is a direct customer experience failure." }
+    },
+    frequency: "Continuous", avgDuration: 30, automationReadiness: 3, noToolExists: false,
+    currentTools: ["Substitution dashboard","Product database","Clubcard data"],
+    topQuote: "Every bad substitution is a direct customer experience failure."
+  },
+  { id: "pickerConflict", name: "Coordinate pickers vs in-store shoppers", domain: "dotcomOps",
+    roles: {
+      dotcom: { ec: "high", bb: -6, u:"H",b:"H",i:"H",f:"M", quote: "A third of in-store shoppers say online pickers negatively affect their experience." }
+    },
+    frequency: "Continuous", avgDuration: 45, automationReadiness: 1, noToolExists: true,
+    currentTools: ["Visual floor management","Handheld messaging"],
+    topQuote: "I'm the political buffer."
+  },
+  { id: "consolidatePicks", name: "Consolidate multi-zone picks into orders", domain: "dotcomOps",
+    roles: {
+      dotcom: { ec: "medium", bb: -4, u:"M",b:"M",i:"L",f:"H", quote: "Physical coordination in cramped back-room space." }
+    },
+    frequency: "Per wave", avgDuration: 40, automationReadiness: 3, noToolExists: false,
+    currentTools: ["Marshalling area","Tote scanning","Order completion screen"],
+    topQuote: "Physical coordination in cramped back-room space."
+  },
+  { id: "vanLoading", name: "Supervise van loading & cold chain", domain: "dotcomOps",
+    roles: {
+      dotcom: { ec: "medium", bb: -4, u:"M",b:"H",i:"L",f:"H", quote: "Cold chain compliance depends on correct loading." }
+    },
+    frequency: "Per dispatch", avgDuration: 30, automationReadiness: 2.5, noToolExists: false,
+    currentTools: ["Van assignment","Tray scanning","Multi-temp van","Driver PDA"],
+    topQuote: "Cold chain compliance depends on correct loading."
+  },
+  { id: "whooshOrders", name: "Handle rapid/Whoosh delivery orders", domain: "dotcomOps",
+    roles: {
+      dotcom: { ec: "high", bb: -5, u:"H",b:"H",i:"M",f:"H", quote: "30-60 minute delivery promise means zero buffer." }
+    },
+    frequency: "Continuous", avgDuration: 25, automationReadiness: 2.5, noToolExists: false,
+    currentTools: ["Rapid order queue","Priority picking","Cycle courier dispatch"],
+    topQuote: "30-60 minute delivery promise means zero buffer."
+  },
+  { id: "clickCollect", name: "Manage Click & Collect orders", domain: "dotcomOps",
+    roles: {
+      dotcom: { ec: "medium", bb: -3, u:"M",b:"M",i:"L",f:"H", quote: "Customer arrives before order ready." }
+    },
+    frequency: "Continuous", avgDuration: 30, automationReadiness: 3, noToolExists: false,
+    currentTools: ["C&C holding area","Customer notification","ID verification"],
+    topQuote: "Customer arrives before order ready."
+  },
+  { id: "driverDispatch", name: "Confirm driver attendance & dispatch", domain: "dotcomOps",
+    roles: {
+      dotcom: { ec: "medium", bb: -3, u:"M",b:"H",i:"L",f:"M", quote: "Driver absence means 15-20 failed deliveries." }
+    },
+    frequency: "Daily", avgDuration: 20, automationReadiness: 3, noToolExists: false,
+    currentTools: ["Driver rota","Route assignment","GPS tracking"],
+    topQuote: "Driver absence means 15-20 failed deliveries."
+  },
+  { id: "onShelfAvail", name: "Manage on-shelf availability for picks", domain: "dotcomOps",
+    roles: {
+      dotcom: { ec: "medium", bb: -4, u:"H",b:"M",i:"M",f:"M", quote: "Constant negotiation with peer managers over replenishment priority." }
+    },
+    frequency: "Continuous", avgDuration: 30, automationReadiness: 2.5, noToolExists: false,
+    currentTools: ["Handheld gap reports","Department manager comms"],
+    topQuote: "Constant negotiation with peer managers."
+  },
+
+  // --- ADMIN domain ---
+  { id: "shiftHandover", name: "Compile shift handover", domain: "admin",
+    roles: {
+      freshDM:     { ec: "medium", bb: -3, u:"M",b:"M",i:"L",f:"H", quote: "Admin gets squeezed into the last 30 minutes when you can barely think straight." },
+      groceryDM:   { ec: "medium", bb: -2, u:"M",b:"M",i:"L",f:"H", quote: "You compile notes at the end of an exhausting shift when you can barely think." },
+      checkout:    { ec: "medium", bb: -3, u:"M",b:"H",i:"L",f:"H", quote: "Counted out, every shift. Personal liability never stops." },
+      night:       { ec: "high",   bb: -5, u:"M",b:"H",i:"M",f:"H", quote: "Exhaustion after 8+ hours. Feeling that handover is not valued. Information gets lost." },
+      dotcom:      { ec: "medium", bb: -3, u:"M",b:"M",i:"L",f:"H", quote: "End of shift admin. Review the damage. Prepare for tomorrow." },
+      convenience: { ec: "medium", bb: -3, u:"M",b:"M",i:"L",f:"H", quote: "Admin gets squeezed into whatever quiet moment exists. Often done at home, unpaid." },
+      discount:    { ec: "high",   bb: -4, u:"M",b:"H",i:"M",f:"H", quote: "Admin often done at home unpaid." }
+    },
+    frequency: "Per shift", avgDuration: 25, automationReadiness: 0.5, noToolExists: true,
+    currentTools: ["Handover book","Mental recall","WhatsApp","Email"],
+    topQuote: "Exhaustion after 8+ hours. Information gets lost."
+  },
+  { id: "receiveHandover", name: "Receive shift handover", domain: "admin",
+    roles: {
+      groceryDM:{ ec: "high", bb: -5, u:"H",b:"H",i:"M",f:"L", quote: "Walking in to find 20 unworked cages triggers immediate stress." },
+      night:    { ec: "high", bb: -4, u:"H",b:"M",i:"M",f:"L", quote: "Handover is rushed or skipped entirely. Critical information not communicated." }
+    },
+    frequency: "Per shift", avgDuration: 15, automationReadiness: 0.5, noToolExists: true,
+    currentTools: ["Handover book","Verbal briefing"],
+    topQuote: "Walking in to find 20 unworked cages triggers immediate stress."
+  },
+  { id: "adminMeetings", name: "Attend meetings / respond to emails", domain: "admin",
+    roles: {
+      groceryDM:   { ec: "medium", bb: -2, u:"M",b:"M",i:"L",f:"H", quote: "Meetings about why availability is bad, when the answer is always the same." },
+      discount:    { ec: "high",   bb: -4, u:"M",b:"H",i:"M",f:"H", quote: "Area managers are plucked from uni with zero life experience." },
+      convenience: { ec: "high",   bb: -5, u:"M",b:"H",i:"M",f:"H", quote: "64% cite volume as top challenge." }
+    },
+    frequency: "Daily", avgDuration: 40, automationReadiness: 2, noToolExists: false,
+    currentTools: ["Email","KPI dashboard","Meeting room"],
+    topQuote: "Meetings about why availability is bad."
+  },
+  { id: "adminGeneral", name: "Complete scheduling, ordering, admin", domain: "admin",
+    roles: {
+      convenience: { ec: "medium", bb: -3, u:"M",b:"M",i:"L",f:"H", quote: "Admin gets squeezed into whatever quiet moment exists." }
+    },
+    frequency: "Daily", avgDuration: 40, automationReadiness: 2, noToolExists: false,
+    currentTools: ["Scheduling system","Ordering system","Compliance reports"],
+    topQuote: "Admin gets squeezed into whatever quiet moment exists."
+  },
+  { id: "returnsDotcom", name: "Process returns, complaints, perf review", domain: "admin",
+    roles: {
+      dotcom: { ec: "medium", bb: -3, u:"M",b:"M",i:"L",f:"H", quote: "End of shift admin. Review the damage. Prepare for tomorrow." }
+    },
+    frequency: "Daily", avgDuration: 30, automationReadiness: 2.5, noToolExists: false,
+    currentTools: ["Returns system","Refund module","Performance dashboard"],
+    topQuote: "Review the damage. Prepare for tomorrow."
+  },
+
+  // --- CHECKOUT/QUEUE domain ---
+  { id: "queueMonitor", name: "Monitor Irisys queue sensors & respond", domain: "checkout_d",
+    roles: {
+      checkout: { ec: "high", bb: -6, u:"H",b:"H",i:"M",f:"H", quote: "Real-time accountability. Irisys data is visible to senior management." }
+    },
+    frequency: "Continuous", avgDuration: 60, automationReadiness: 4, noToolExists: false,
+    currentTools: ["Irisys infrared sensors","Predictor dashboard","ELMS"],
+    topQuote: "Real-time accountability."
+  },
+  { id: "lunchPeak", name: "Lunch peak queue management crisis", domain: "checkout_d",
+    roles: {
+      checkout: { ec: "extreme", bb: -10, u:"H",b:"H",i:"H",f:"H", quote: "56% of customers won't return after a bad queuing experience. Saturday lunch is a war zone." }
+    },
+    frequency: "Daily", avgDuration: 45, automationReadiness: 2, noToolExists: true,
+    currentTools: ["Irisys","PA system","Staff redeployment"],
+    topQuote: "Saturday lunch is a war zone."
+  },
+  { id: "eveningPrep", name: "Evening peak preparation & briefing", domain: "checkout_d",
+    roles: {
+      checkout: { ec: "medium", bb: -3, u:"M",b:"M",i:"L",f:"H", quote: "Brief the evening team, hand over the problems, try to leave on time. Rarely works." }
+    },
+    frequency: "Daily", avgDuration: 20, automationReadiness: 2, noToolExists: false,
+    currentTools: ["Rota","Irisys forecast","Staff allocation"],
+    topQuote: "Try to leave on time. Rarely works."
+  },
+  { id: "discountCheckout", name: "Man checkout & scan at speed (discount)", domain: "checkout_d",
+    roles: {
+      discount: { ec: "high", bb: -6, u:"L",b:"H",i:"H",f:"H", quote: "Scanning speed target 1,000-1,200 items per hour. Three speed failures means potential dismissal." }
+    },
+    frequency: "Multiple daily", avgDuration: 60, automationReadiness: 1, noToolExists: true,
+    currentTools: ["GK Software POS","Barcode scanner"],
+    topQuote: "Three speed failures means potential dismissal."
+  },
+
+  // --- NIGHT-SPECIFIC domain ---
+  { id: "calcAllocation", name: "Calculate work allocation (cages to staff)", domain: "nightOps",
+    roles: {
+      night: { ec: "high", bb: -5, u:"H",b:"H",i:"H",f:"M", quote: "Getting allocation wrong causes resentment. No digital tool for this." }
+    },
+    frequency: "Nightly", avgDuration: 15, automationReadiness: 0, noToolExists: true,
+    currentTools: ["Cage count","Staff list","Whiteboard"],
+    topQuote: "Getting allocation wrong causes resentment."
+  },
+  { id: "monitorFill", name: "Monitor fill progress rounds", domain: "nightOps",
+    roles: {
+      night: { ec: "medium", bb: -4, u:"M",b:"M",i:"M",f:"H", quote: "No retailer has real-time digital tracking for cage completion." }
+    },
+    frequency: "2-3x nightly", avgDuration: 25, automationReadiness: 0.5, noToolExists: true,
+    currentTools: ["Visual tally","Whiteboard","Mental tracking"],
+    topQuote: "No retailer has real-time digital tracking for cage completion."
+  },
+  { id: "nightStaffCheck", name: "Check staffing roster vs actuals", domain: "nightOps",
+    roles: {
+      night: { ec: "extreme", bb: -8, u:"H",b:"H",i:"H",f:"L", quote: "No-shows discovered after handover. No contingency. Must recalculate entire work plan." }
+    },
+    frequency: "Nightly", avgDuration: 10, automationReadiness: 2, noToolExists: false,
+    currentTools: ["Roster printout","Clock-in system"],
+    topQuote: "No-shows discovered after handover. No contingency."
+  },
+  { id: "nightFloorWalk", name: "Walk shop floor to assess current state", domain: "nightOps",
+    roles: {
+      night: { ec: "high", bb: -4, u:"M",b:"H",i:"M",f:"L", quote: "Frustration when day team leaves mess." }
+    },
+    frequency: "Nightly", avgDuration: 20, automationReadiness: 0, noToolExists: true,
+    currentTools: ["Torch","Visual inspection"],
+    topQuote: "Frustration when day team leaves mess."
+  },
+
+  // --- ADDITIONAL tasks from the MD that round out the picture ---
+  { id: "selChanges", name: "Execute SEL/price changes for promotions", domain: "stock",
+    roles: {
+      groceryDM:{ ec: "medium", bb: -3, u:"M",b:"M",i:"L",f:"H", quote: "2-3 hours per week of label changes at non-ESL stores." }
+    },
+    frequency: "Weekly", avgDuration: 150, automationReadiness: 2, noToolExists: false,
+    currentTools: ["Paper labels","ESLs (Morrisons/Lidl)","Pricing gun"],
+    topQuote: "2-3 hours per week of label changes."
+  },
+  { id: "piCounts", name: "Perpetual inventory counts", domain: "stock",
+    roles: {
+      groceryDM:{ ec: "medium", bb: -3, u:"M",b:"M",i:"L",f:"M", quote: "PI counts on scheduled sections. 60% inventory inaccuracy." }
+    },
+    frequency: "13-week cycle", avgDuration: 120, automationReadiness: 2, noToolExists: false,
+    currentTools: ["Handheld scanner","PI system"],
+    topQuote: "60% inventory inaccuracy."
+  },
+  { id: "cleanStore", name: "Clean store (toilets, floors, trolleys)", domain: "stock",
+    roles: {
+      discount: { ec: "high", bb: -4, u:"L",b:"M",i:"H",f:"H", quote: "As SM you personally clean toilets, mop floors, collect trolleys. No escape to an office." }
+    },
+    frequency: "Continuous", avgDuration: 30, automationReadiness: 1, noToolExists: true,
+    currentTools: ["Cleaning supplies","Floor scrubber"],
+    topQuote: "No escape to an office."
+  },
+  { id: "bakeoff", name: "Bake-off production throughout day", domain: "trading",
+    roles: {
+      discount: { ec: "low", bb: -1, u:"L",b:"L",i:"L",f:"L", quote: "Lidl's croissant sells 122 per minute nationwide." }
+    },
+    frequency: "3-6x daily", avgDuration: 15, automationReadiness: 3, noToolExists: false,
+    currentTools: ["Commercial oven","Frozen dough","Production schedule"],
+    topQuote: "Lidl's croissant sells 122 per minute."
+  },
+  { id: "manageLefoverCages", name: "Identify & log leftover cages from night", domain: "stock",
+    roles: {
+      groceryDM: { ec: "extreme", bb: -8, u:"H",b:"H",i:"H",f:"M", quote: "The number of leftover cages is the single strongest predictor of how bad the day will be." }
+    },
+    frequency: "Daily", avgDuration: 15, automationReadiness: 0, noToolExists: true,
+    currentTools: ["Visual count","Cage labels"],
+    topQuote: "The number of leftover cages is the single strongest predictor."
+  },
+  { id: "substitutionReview", name: "Review substitution quality & override", domain: "dotcomOps",
+    roles: {
+      dotcom: { ec: "medium", bb: -3, u:"M",b:"M",i:"M",f:"H", quote: "Decision fatigue across dozens of daily overrides." }
+    },
+    frequency: "Continuous", avgDuration: 25, automationReadiness: 3, noToolExists: false,
+    currentTools: ["Substitution dashboard","Override function"],
+    topQuote: "Decision fatigue across dozens of daily overrides."
+  },
+  { id: "afternoonDateWalk", name: "Afternoon date walk & gap check", domain: "compliance",
+    roles: {
+      freshDM: { ec: "medium", bb: -4, u:"M",b:"H",i:"L",f:"H", quote: "By 1pm you're knackered but you still have to walk every metre of the department again." }
+    },
+    frequency: "Daily", avgDuration: 25, automationReadiness: 1.5, noToolExists: false,
+    currentTools: ["Visual inspection","Handheld"],
+    topQuote: "By 1pm you're knackered."
+  },
+  { id: "orderReview_dc", name: "Review stock ordering / RELEX review", domain: "stock",
+    roles: {
+      discount: { ec: "medium", bb: -2, u:"M",b:"M",i:"L",f:"M", quote: "RELEX ordering is highly automated but needs oversight." }
+    },
+    frequency: "Daily", avgDuration: 30, automationReadiness: 5, noToolExists: false,
+    currentTools: ["RELEX","Back-office terminal"],
+    topQuote: "Already highly automated."
+  }
+];
+
+// ==================== TASK-TO-TASK DEPENDENCIES ====================
+const DEPENDENCIES = [
+  // Delivery -> Stock flow
+  ["receiveDelivery", "tempCheckDelivery"],
+  ["receiveDelivery", "inspectQuality"],
+  ["receiveDelivery", "reconcileDelivery"],
+  ["receiveDelivery", "sortCages"],
+  ["sortCages", "workStock"],
+  ["workStock", "gapWalk"],
+  ["gapWalk", "gapScanning"],
+  ["gapScanning", "kisLines"],
+  ["gapWalk", "clearCages"],
+  // Date/quality flow
+  ["workStock", "dateCodeCheck"],
+  ["dateCodeCheck", "markdownExec"],
+  ["markdownExec", "processWaste"],
+  ["inspectQuality", "dateCodeCheck"],
+  // Compliance flow
+  ["tempCheckDelivery", "tempMonitoring"],
+  ["tempMonitoring", "tempBreach"],
+  ["openingChecklist", "tempMonitoring"],
+  ["openingChecklist", "foodSafety"],
+  ["prepFloats", "cashRecon"],
+  // People flow
+  ["buildRota", "coverAbsence"],
+  ["coverAbsence", "deployTeam"],
+  ["deployTeam", "coachStaff"],
+  ["nightStaffCheck", "calcAllocation"],
+  ["calcAllocation", "deployTeam"],
+  // Handover chain
+  ["shiftHandover", "receiveHandover"],
+  ["receiveHandover", "gapWalk"],
+  ["receiveHandover", "nightFloorWalk"],
+  // Trading flow
+  ["markdownExec", "foodToGo"],
+  ["promoChangeover", "selChanges"],
+  ["promoChangeover", "planogramExec"],
+  // Dotcom flow
+  ["reviewOrders_dc", "planPickWave"],
+  ["planPickWave", "launchPickWave"],
+  ["launchPickWave", "substitutions"],
+  ["substitutions", "substitutionReview"],
+  ["launchPickWave", "consolidatePicks"],
+  ["consolidatePicks", "vanLoading"],
+  ["vanLoading", "driverDispatch"],
+  // Queue flow
+  ["queueMonitor", "callCheckout"],
+  ["callCheckout", "checkoutCover"],
+  ["queueMonitor", "lunchPeak"],
+  ["lunchPeak", "eveningPrep"],
+  // Night flow
+  ["reviewDeliverySchedule", "receiveDelivery"],
+  ["monitorFill", "faceUp"],
+  ["faceUp", "clearCages"],
+  ["clearCages", "shiftHandover"]
+];
+
+// ==================== LAYOUT COMPUTATION ====================
+const SVG_W = 1440, SVG_H = 720;
+const TASK_W = 120, TASK_H = 36;
+const ROLE_W = 94, ROLE_H = 34;
+
+// Domain zones (x, y, width, height)
+const DOMAIN_ZONES = {
+  delivery:   { x: 40,   y: 60,   w: 280, h: 300, label: "Delivery & Receiving" },
+  stock:      { x: 40,   y: 380,  w: 340, h: 440, label: "Stock & Fill" },
+  compliance: { x: 350,  y: 60,   w: 360, h: 340, label: "Compliance & Safety" },
+  trading:    { x: 730,  y: 60,   w: 320, h: 440, label: "Trading & Customer" },
+  people:     { x: 350,  y: 420,  w: 360, h: 400, label: "People & Scheduling" },
+  admin:      { x: 730,  y: 520,  w: 320, h: 300, label: "Admin & Handover" },
+  dotcomOps:  { x: 1070, y: 60,   w: 280, h: 460, label: "Dotcom Operations" },
+  checkout_d: { x: 1070, y: 540,  w: 280, h: 280, label: "Checkout & Queue" },
+  nightOps:   { x: 400,  y: 60,   w: 240, h: 340, label: "Night Operations" }
+};
+
+// Recompute zones — 4-column grid, properly sized for task counts
+// Col1: delivery(7)+stock(14), Col2: compliance(10)+people(7)+admin(5), Col3: trading(12)+nightOps(4), Col4: dotcomOps(12)+checkout_d(8)
+Object.assign(DOMAIN_ZONES, {
+  delivery:   { x: 20,   y: 30,   w: 270, h: 210, label: "Delivery & Receiving" },
+  stock:      { x: 20,   y: 260,  w: 270, h: 350, label: "Stock & Fill" },
+  compliance: { x: 310,  y: 30,   w: 400, h: 220, label: "Compliance & Safety" },
+  people:     { x: 310,  y: 270,  w: 400, h: 180, label: "People & Scheduling" },
+  admin:      { x: 310,  y: 470,  w: 280, h: 170, label: "Admin & Handover" },
+  trading:    { x: 730,  y: 30,   w: 300, h: 300, label: "Trading & Customer" },
+  nightOps:   { x: 730,  y: 350,  w: 280, h: 130, label: "Night Operations" },
+  dotcomOps:  { x: 1050, y: 30,   w: 350, h: 300, label: "Dotcom Operations" },
+  checkout_d: { x: 1050, y: 350,  w: 350, h: 220, label: "Checkout & Queue" }
+});
+
+function computeTaskPositions() {
+  // Group tasks by domain
+  const domainTasks = {};
+  TASKS.forEach(t => {
+    if (!domainTasks[t.domain]) domainTasks[t.domain] = [];
+    domainTasks[t.domain].push(t);
+  });
+
+  TASKS.forEach(t => {
+    const zone = DOMAIN_ZONES[t.domain];
+    if (!zone) return;
+    const tasks = domainTasks[t.domain];
+    const idx = tasks.indexOf(t);
+    const cols = Math.max(1, Math.floor(zone.w / (TASK_W + 10)));
+    const col = idx % cols;
+    const row = Math.floor(idx / cols);
+    t.x = zone.x + 12 + col * (TASK_W + 10);
+    t.y = zone.y + 28 + row * (TASK_H + 8);
+  });
+}
+
+// Role node positions (bottom row, evenly spaced, ordered by domain proximity)
+const ROLE_POSITIONS = {
+  discount:    { x: 60,   y: 660 },
+  freshDM:     { x: 250,  y: 660 },
+  groceryDM:   { x: 440,  y: 660 },
+  convenience: { x: 630,  y: 660 },
+  night:       { x: 820,  y: 660 },
+  checkout:    { x: 1010, y: 660 },
+  dotcom:      { x: 1200, y: 660 }
+};
+
+computeTaskPositions();
+
+// ==================== STATE ====================
+let viewMode = 'pain';
+let solutionLensActive = false;
+let solvedTasks = new Set();
+let activeRoles = {};
+ROLE_KEYS.forEach(k => activeRoles[k] = true);
+let hoveredTask = null;
+let hoveredRole = null;
+let selectedTask = null;
+let selectedRole = null;
+
+// ==================== COLOR HELPERS ====================
+const PAIN_COLORS = { low: "#2D7A4F", medium: "#D4A843", high: "#E07A3A", extreme: "#E05252" };
+
+function avgEmotionalCost(task) {
+  const levels = { low: 1, medium: 2, high: 3, extreme: 4 };
+  const roleKeys = Object.keys(task.roles);
+  if (roleKeys.length === 0) return "medium";
+  const avg = roleKeys.reduce((s, k) => s + (levels[task.roles[k].ec] || 2), 0) / roleKeys.length;
+  if (avg <= 1.5) return "low";
+  if (avg <= 2.5) return "medium";
+  if (avg <= 3.3) return "high";
+  return "extreme";
+}
+
+function roleCount(task) {
+  return Object.keys(task.roles).length;
+}
+
+function getTaskColor(task) {
+  if (viewMode === 'pain') {
+    return PAIN_COLORS[avgEmotionalCost(task)];
+  } else if (viewMode === 'connectivity') {
+    const n = roleCount(task);
+    if (n >= 5) return "#E05252";
+    if (n >= 4) return "#E07A3A";
+    if (n >= 3) return "#D4A843";
+    if (n >= 2) return "#7078E0";
+    return "#2D7A4F";
+  } else if (viewMode === 'automation') {
+    const ar = task.automationReadiness;
+    if (ar <= 1) return "#E05252";
+    if (ar <= 2) return "#E07A3A";
+    if (ar <= 3) return "#D4A843";
+    return "#2D7A4F";
+  } else if (viewMode === 'whitespace') {
+    return task.noToolExists ? "#E05252" : "#2A2A2E";
+  }
+  return "#5A5A64";
+}
+
+function getTaskBorderWidth(task) {
+  const n = roleCount(task);
+  return Math.min(1 + n * 0.5, 4);
+}
+
+// ==================== RENDERING ====================
+const svg = document.getElementById('graphSvg');
+const NS = "http://www.w3.org/2000/svg";
+
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+function renderGraph() {
+  svg.innerHTML = '';
+  svg.setAttribute('viewBox', `0 0 ${SVG_W} ${SVG_H}`);
+  svg.setAttribute('preserveAspectRatio', 'xMidYMin meet');
+
+  // Defs
+  const defs = el('defs', {}, svg);
+
+  // Glow filter
+  const filter = el('filter', { id: 'glow', x: '-50%', y: '-50%', width: '200%', height: '200%' }, defs);
+  el('feGaussianBlur', { stdDeviation: '3', result: 'blur' }, filter);
+  const feMerge = el('feMerge', {}, filter);
+  el('feMergeNode', { in: 'blur' }, feMerge);
+  el('feMergeNode', { in: 'SourceGraphic' }, feMerge);
+
+  // Role shadow filter
+  const roleShadow = el('filter', { id: 'roleShadow', x: '-20%', y: '-20%', width: '140%', height: '140%' }, defs);
+  el('feDropShadow', { dx: '0', dy: '1', stdDeviation: '2', 'flood-color': 'rgba(0,0,0,0.4)', 'flood-opacity': '0.4' }, roleShadow);
+
+  // Arrow marker
+  const marker = el('marker', { id: 'arrow', viewBox: '0 0 10 10', refX: '10', refY: '5', markerWidth: '6', markerHeight: '6', orient: 'auto' }, defs);
+  el('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: '#3A3A3E' }, marker);
+
+  // Domain zone labels
+  const zoneGroup = el('g', { class: 'zones' }, svg);
+  for (const [key, zone] of Object.entries(DOMAIN_ZONES)) {
+    el('rect', {
+      x: zone.x, y: zone.y, width: zone.w, height: zone.h,
+      rx: 8, fill: 'none', stroke: '#1E1E22', 'stroke-width': 1, 'stroke-dasharray': '4,4'
+    }, zoneGroup);
+    const labelEl = el('text', {
+      x: zone.x + 6, y: zone.y + 14, fill: '#2E2E34', 'font-size': '10', 'font-weight': '600',
+      'font-family': 'Inter, sans-serif', 'letter-spacing': '1'
+    }, zoneGroup);
+    labelEl.textContent = zone.label.toUpperCase();
+  }
+
+  // Dependency edges
+  const depGroup = el('g', { class: 'dep-edges', id: 'depEdges' }, svg);
+  renderDependencyEdges(depGroup);
+
+  // Assignment edges (hidden by default)
+  const assignGroup = el('g', { class: 'assign-edges', id: 'assignEdges', opacity: '0' }, svg);
+
+  // Task nodes
+  const taskGroup = el('g', { class: 'tasks', id: 'taskNodes' }, svg);
+  TASKS.forEach(t => renderTaskNode(t, taskGroup));
+
+  // Role nodes
+  const roleGroup = el('g', { class: 'roles', id: 'roleNodes' }, svg);
+  ROLE_KEYS.forEach(k => renderRoleNode(k, roleGroup));
+
+  updateLegend();
+}
+
+function renderDependencyEdges(parent) {
+  DEPENDENCIES.forEach(([fromId, toId]) => {
+    const from = TASKS.find(t => t.id === fromId);
+    const to = TASKS.find(t => t.id === toId);
+    if (!from || !to || from.x == null || to.x == null) return;
+    const x1 = from.x + TASK_W / 2, y1 = from.y + TASK_H / 2;
+    const x2 = to.x + TASK_W / 2, y2 = to.y + TASK_H / 2;
+    const midX = (x1 + x2) / 2;
+    const midY = (y1 + y2) / 2;
+    const dx = x2 - x1, dy = y2 - y1;
+    const cx = midX - dy * 0.1;
+    const cy = midY + dx * 0.1;
+    const d = `M${x1},${y1} Q${cx},${cy} ${x2},${y2}`;
+    el('path', {
+      d, fill: 'none',
+      stroke: '#2A2A2E', 'stroke-width': '1.2', 'marker-end': 'url(#arrow)',
+      'data-from': fromId, 'data-to': toId, class: 'dep-edge', opacity: '0.25'
+    }, parent);
+  });
+}
+
+function renderTaskNode(task, parent) {
+  if (task.x == null) return;
+  const g = el('g', { class: 'task-node', 'data-id': task.id, cursor: 'pointer' }, parent);
+
+  const color = getTaskColor(task);
+  const bw = getTaskBorderWidth(task);
+  const isDashed = task.noToolExists;
+
+  // Background rect
+  const rect = el('rect', {
+    x: task.x, y: task.y, width: TASK_W, height: TASK_H,
+    rx: 6, fill: '#141416',
+    stroke: color, 'stroke-width': bw,
+    'stroke-dasharray': isDashed ? '4,2' : 'none',
+    class: 'task-rect'
+  }, g);
+
+  // Name text (truncated)
+  const name = task.name.length > 24 ? task.name.substring(0, 22) + '..' : task.name;
+  const text = el('text', {
+    x: task.x + TASK_W / 2, y: task.y + TASK_H / 2 + 1,
+    fill: '#C8C8D0', 'font-size': '9', 'font-weight': '500',
+    'font-family': 'Inter, sans-serif', 'text-anchor': 'middle',
+    'dominant-baseline': 'middle', 'pointer-events': 'none'
+  }, g);
+  text.textContent = name;
+
+  // Role count badge
+  const n = roleCount(task);
+  if (n > 1) {
+    const bx = task.x + TASK_W - 10, by = task.y - 4;
+    el('circle', { cx: bx, cy: by, r: 7, fill: color, opacity: '0.9' }, g);
+    el('text', {
+      x: bx, y: by + 1, fill: '#fff', 'font-size': '8', 'font-weight': '700',
+      'font-family': 'Inter, sans-serif', 'text-anchor': 'middle', 'dominant-baseline': 'middle',
+      'pointer-events': 'none'
+    }, g).textContent = n;
+  }
+
+  // No-tool icon
+  if (task.noToolExists) {
+    el('text', {
+      x: task.x + 6, y: task.y - 2, fill: '#E05252', 'font-size': '9',
+      'font-family': 'Inter, sans-serif', 'pointer-events': 'none'
+    }, g).textContent = '!';
+  }
+
+  // Events
+  g.addEventListener('mouseenter', (e) => onTaskHover(task, e));
+  g.addEventListener('mouseleave', () => onTaskUnhover());
+  g.addEventListener('click', (e) => { e.stopPropagation(); onTaskClick(task); });
+}
+
+function renderRoleNode(roleKey, parent) {
+  const pos = ROLE_POSITIONS[roleKey];
+  const role = ROLES[roleKey];
+  const g = el('g', { class: 'role-node', 'data-role': roleKey, cursor: 'pointer' }, parent);
+
+  el('rect', {
+    x: pos.x, y: pos.y, width: ROLE_W, height: ROLE_H,
+    rx: ROLE_H / 2, fill: role.color + '22', stroke: role.color, 'stroke-width': 2,
+    class: 'role-rect', filter: 'url(#roleShadow)'
+  }, g);
+
+  el('text', {
+    x: pos.x + ROLE_W / 2, y: pos.y + ROLE_H / 2 + 1,
+    fill: role.color, 'font-size': '11', 'font-weight': '600',
+    'font-family': 'Inter, sans-serif', 'text-anchor': 'middle', 'dominant-baseline': 'middle',
+    'pointer-events': 'none'
+  }, g).textContent = role.name;
+
+  g.addEventListener('mouseenter', (e) => onRoleHover(roleKey, e));
+  g.addEventListener('mouseleave', () => onRoleUnhover());
+  g.addEventListener('click', (e) => { e.stopPropagation(); onRoleClick(roleKey); });
+}
+
+// ==================== INTERACTIONS ====================
+function onTaskHover(task, e) {
+  if (selectedTask || selectedRole) return;
+  hoveredTask = task;
+  dimAll(0.15);
+  highlightTask(task);
+  showTooltip(task, e);
+}
+
+function onTaskUnhover() {
+  if (selectedTask || selectedRole) return;
+  hoveredTask = null;
+  undimAll();
+  hideAssignEdges();
+  hideTooltip();
+}
+
+function onRoleHover(roleKey, e) {
+  if (selectedTask || selectedRole) return;
+  hoveredRole = roleKey;
+  dimAll(0.15);
+  highlightRole(roleKey);
+  showRoleTooltip(roleKey, e);
+}
+
+function onRoleUnhover() {
+  if (selectedTask || selectedRole) return;
+  hoveredRole = null;
+  undimAll();
+  hideAssignEdges();
+  hideTooltip();
+}
+
+function onTaskClick(task) {
+  if (solutionLensActive) {
+    toggleSolved(task.id);
+    return;
+  }
+  selectedTask = (selectedTask === task) ? null : task;
+  selectedRole = null;
+  if (selectedTask) {
+    dimAll(0.15);
+    highlightTask(selectedTask);
+    showDetailPanel(selectedTask);
+  } else {
+    undimAll();
+    hideAssignEdges();
+    closeDetail();
+  }
+}
+
+function onRoleClick(roleKey) {
+  selectedRole = (selectedRole === roleKey) ? null : roleKey;
+  selectedTask = null;
+  if (selectedRole) {
+    dimAll(0.15);
+    highlightRole(selectedRole);
+    showRoleDetailPanel(selectedRole);
+  } else {
+    undimAll();
+    hideAssignEdges();
+    closeDetail();
+  }
+}
+
+function dimAll(opacity) {
+  document.querySelectorAll('.task-node').forEach(n => n.style.opacity = 0.12);
+  document.querySelectorAll('.role-node').forEach(n => n.style.opacity = 0.12);
+  document.querySelectorAll('.dep-edge').forEach(e => e.style.opacity = '0.05');
+}
+
+function undimAll() {
+  document.querySelectorAll('.task-node').forEach(n => {
+    const id = n.getAttribute('data-id');
+    const task = TASKS.find(t => t.id === id);
+    const isActiveTask = task && Object.keys(task.roles).some(r => activeRoles[r]);
+    n.style.opacity = isActiveTask ? '1' : '0.15';
+    n.style.filter = '';
+  });
+  document.querySelectorAll('.role-node').forEach(n => {
+    const rk = n.getAttribute('data-role');
+    n.style.opacity = activeRoles[rk] ? '1' : '0.3';
+  });
+  document.querySelectorAll('.dep-edge').forEach(e => e.style.opacity = '0.25');
+  updateSolvedVisuals();
+}
+
+function highlightTask(task) {
+  const node = document.querySelector(`.task-node[data-id="${task.id}"]`);
+  if (node) { node.style.opacity = '1'; node.style.filter = 'url(#glow)'; }
+
+  // Show assignment edges
+  showAssignEdgesForTask(task);
+
+  // Highlight connected roles
+  Object.keys(task.roles).forEach(rk => {
+    const rn = document.querySelector(`.role-node[data-role="${rk}"]`);
+    if (rn) rn.style.opacity = '1';
+  });
+
+  // Highlight dependency neighbors
+  DEPENDENCIES.forEach(([from, to]) => {
+    if (from === task.id || to === task.id) {
+      const otherId = from === task.id ? to : from;
+      const otherNode = document.querySelector(`.task-node[data-id="${otherId}"]`);
+      if (otherNode) otherNode.style.opacity = '0.7';
+      document.querySelectorAll(`.dep-edge[data-from="${from}"][data-to="${to}"]`).forEach(e => {
+        e.style.opacity = '0.8';
+        e.style.stroke = '#5E6AD2';
+      });
+    }
+  });
+}
+
+function highlightRole(roleKey) {
+  const rn = document.querySelector(`.role-node[data-role="${roleKey}"]`);
+  if (rn) { rn.style.opacity = '1'; rn.style.filter = 'url(#glow)'; }
+
+  TASKS.forEach(t => {
+    if (t.roles[roleKey]) {
+      const node = document.querySelector(`.task-node[data-id="${t.id}"]`);
+      if (node) node.style.opacity = '1';
+    }
+  });
+
+  showAssignEdgesForRole(roleKey);
+}
+
+function showAssignEdgesForTask(task) {
+  hideAssignEdges();
+  const group = document.getElementById('assignEdges');
+  group.setAttribute('opacity', '1');
+  Object.keys(task.roles).forEach(rk => {
+    if (!activeRoles[rk]) return;
+    const rPos = ROLE_POSITIONS[rk];
+    const rx = rPos.x + ROLE_W / 2, ry = rPos.y + ROLE_H / 2;
+    const tx = task.x + TASK_W / 2, ty = task.y + TASK_H / 2;
+    const midX = (rx + tx) / 2, midY = (ry + ty) / 2;
+    const dx = tx - rx, dy = ty - ry;
+    const cx = midX + dy * 0.08, cy = midY - dx * 0.08;
+    el('path', {
+      d: `M${rx},${ry} Q${cx},${cy} ${tx},${ty}`, fill: 'none',
+      stroke: ROLES[rk].color, 'stroke-width': '1.5', opacity: '0.35',
+      class: 'assign-edge-line'
+    }, group);
+  });
+}
+
+function showAssignEdgesForRole(roleKey) {
+  hideAssignEdges();
+  const group = document.getElementById('assignEdges');
+  group.setAttribute('opacity', '1');
+  const rPos = ROLE_POSITIONS[roleKey];
+  const rx = rPos.x + ROLE_W / 2, ry = rPos.y + ROLE_H / 2;
+  TASKS.forEach(t => {
+    if (t.roles[roleKey]) {
+      const tx = t.x + TASK_W / 2, ty = t.y + TASK_H / 2;
+      const midX = (rx + tx) / 2, midY = (ry + ty) / 2;
+      const dx = tx - rx, dy = ty - ry;
+      const cx = midX + dy * 0.08, cy = midY - dx * 0.08;
+      el('path', {
+        d: `M${rx},${ry} Q${cx},${cy} ${tx},${ty}`, fill: 'none',
+        stroke: ROLES[roleKey].color, 'stroke-width': '1.5', opacity: '0.35',
+        class: 'assign-edge-line'
+      }, group);
+    }
+  });
+}
+
+function hideAssignEdges() {
+  const group = document.getElementById('assignEdges');
+  if (group) {
+    group.querySelectorAll('.assign-edge-line').forEach(l => l.remove());
+    group.setAttribute('opacity', '0');
+  }
+  // Reset dep edge colors
+  document.querySelectorAll('.dep-edge').forEach(e => {
+    e.style.stroke = '';
+  });
+}
+
+// ==================== TOOLTIPS ====================
+function showTooltip(task, e) {
+  const tt = document.getElementById('tooltip');
+  const n = roleCount(task);
+  const avgEC = avgEmotionalCost(task);
+  const roleNames = Object.keys(task.roles).map(r => ROLES[r].name).join(', ');
+  tt.innerHTML = `
+    <div class="tt-name">${task.name}</div>
+    <div class="tt-row">${DOMAINS[task.domain]?.name || task.domain} | ${task.frequency} | ~${task.avgDuration} min</div>
+    <div class="tt-row">Roles: ${n} (${roleNames})</div>
+    <div class="tt-row">Avg pain: ${avgEC} | Automation: ${task.automationReadiness}/5${task.noToolExists ? ' | NO TOOL EXISTS' : ''}</div>
+    <div class="tt-quote" style="border-left-color:${PAIN_COLORS[avgEC]}">"${task.topQuote.length > 80 ? task.topQuote.substring(0, 77) + '...' : task.topQuote}"</div>
+  `;
+  tt.classList.add('visible');
+  positionTooltip(e);
+}
+
+function showRoleTooltip(roleKey, e) {
+  const tt = document.getElementById('tooltip');
+  const role = ROLES[roleKey];
+  const taskCount = TASKS.filter(t => t.roles[roleKey]).length;
+  const domains = [...new Set(TASKS.filter(t => t.roles[roleKey]).map(t => t.domain))];
+  tt.innerHTML = `
+    <div class="tt-name">${role.fullName}</div>
+    <div class="tt-row">${role.salary} | ${role.hours}</div>
+    <div class="tt-row">Tasks: ${taskCount} | Domains: ${domains.length}</div>
+  `;
+  tt.classList.add('visible');
+  positionTooltip(e);
+}
+
+function positionTooltip(e) {
+  const tt = document.getElementById('tooltip');
+  let x = e.clientX + 12, y = e.clientY + 12;
+  if (x + 300 > window.innerWidth) x = e.clientX - 310;
+  if (y + 150 > window.innerHeight) y = e.clientY - 160;
+  tt.style.left = x + 'px';
+  tt.style.top = y + 'px';
+}
+
+function hideTooltip() {
+  document.getElementById('tooltip').classList.remove('visible');
+}
+
+document.addEventListener('mousemove', (e) => {
+  if (hoveredTask || hoveredRole) positionTooltip(e);
+});
+
+// ==================== DETAIL PANEL ====================
+function showDetailPanel(task) {
+  const panel = document.getElementById('detailPanel');
+  const content = document.getElementById('detailContent');
+  const avgEC = avgEmotionalCost(task);
+  const domainInfo = DOMAINS[task.domain] || { name: task.domain, color: '#5A5A64' };
+
+  let rolesHTML = '';
+  for (const [rk, rd] of Object.entries(task.roles)) {
+    if (!ROLES[rk]) continue;
+    rolesHTML += `
+      <div class="dp-role-entry" style="border-left: 3px solid ${ROLES[rk].color}">
+        <div class="dp-role-name" style="color: ${ROLES[rk].color}">${ROLES[rk].fullName}</div>
+        <div class="dp-indicators">
+          <span class="dp-indicator ${rd.u}">Uncertainty: ${rd.u}</span>
+          <span class="dp-indicator ${rd.b}">Blame: ${rd.b}</span>
+          <span class="dp-indicator ${rd.i}">Identity: ${rd.i}</span>
+          <span class="dp-indicator ${rd.f}">Fatigue: ${rd.f}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted)">Body budget: <strong style="color:${rd.bb <= -8 ? 'var(--red)' : rd.bb <= -5 ? 'var(--orange)' : 'var(--yellow)'}">${rd.bb}</strong></div>
+        <div class="dp-quote">"${rd.quote}"</div>
+      </div>
+    `;
+  }
+
+  const upstreamDeps = DEPENDENCIES.filter(d => d[1] === task.id).map(d => TASKS.find(t => t.id === d[0])).filter(Boolean);
+  const downstreamDeps = DEPENDENCIES.filter(d => d[0] === task.id).map(d => TASKS.find(t => t.id === d[1])).filter(Boolean);
+
+  content.innerHTML = `
+    <div class="dp-title">${task.name}</div>
+    <div class="dp-domain" style="background: ${domainInfo.color}22; color: ${domainInfo.color}">${domainInfo.name}</div>
+    <div class="dp-row"><span class="dp-row-label">Frequency</span><span class="dp-row-value">${task.frequency}</span></div>
+    <div class="dp-row"><span class="dp-row-label">Avg Duration</span><span class="dp-row-value">~${task.avgDuration} min</span></div>
+    <div class="dp-row"><span class="dp-row-label">Roles performing</span><span class="dp-row-value">${roleCount(task)}</span></div>
+    <div class="dp-row"><span class="dp-row-label">Automation readiness</span><span class="dp-row-value">${task.automationReadiness}/5</span></div>
+    <div class="dp-row"><span class="dp-row-label">No tool exists</span><span class="dp-row-value" style="color:${task.noToolExists ? 'var(--red)' : 'var(--green)'}">${task.noToolExists ? 'YES' : 'No'}</span></div>
+
+    <div class="dp-section">
+      <div class="dp-section-title">Current Tools</div>
+      <div class="dp-tools">${task.currentTools.map(t => `<span class="dp-tool-tag">${t}</span>`).join('')}</div>
+    </div>
+
+    <div class="dp-section">
+      <div class="dp-section-title">Roles Performing This Task</div>
+      ${rolesHTML}
+    </div>
+
+    ${upstreamDeps.length ? `<div class="dp-section"><div class="dp-section-title">Upstream Dependencies</div>${upstreamDeps.map(t => `<div style="font-size:12px;color:var(--text-muted);margin:2px 0;cursor:pointer" onclick="onTaskClick(TASKS.find(x=>x.id==='${t.id}'))">&larr; ${t.name}</div>`).join('')}</div>` : ''}
+    ${downstreamDeps.length ? `<div class="dp-section"><div class="dp-section-title">Downstream Dependencies</div>${downstreamDeps.map(t => `<div style="font-size:12px;color:var(--text-muted);margin:2px 0;cursor:pointer" onclick="onTaskClick(TASKS.find(x=>x.id==='${t.id}'))">&rarr; ${t.name}</div>`).join('')}</div>` : ''}
+
+    <div class="dp-impact">
+      <div class="dp-impact-title">If solved</div>
+      <div class="dp-impact-text">Affects <strong>${roleCount(task)}</strong> roles, <strong>${downstreamDeps.length}</strong> downstream tasks</div>
+    </div>
+  `;
+  panel.classList.add('open');
+}
+
+function showRoleDetailPanel(roleKey) {
+  const panel = document.getElementById('detailPanel');
+  const content = document.getElementById('detailContent');
+  const role = ROLES[roleKey];
+
+  const roleTasks = TASKS.filter(t => t.roles[roleKey]);
+  const byDomain = {};
+  roleTasks.forEach(t => {
+    const d = DOMAINS[t.domain]?.name || t.domain;
+    if (!byDomain[d]) byDomain[d] = [];
+    byDomain[d].push(t);
+  });
+
+  let domainsHTML = '';
+  for (const [domain, tasks] of Object.entries(byDomain)) {
+    domainsHTML += `<div class="dp-section-title" style="margin-top:12px">${domain}</div>`;
+    domainsHTML += tasks.map(t => {
+      const rd = t.roles[roleKey];
+      const ec = rd.ec;
+      const color = PAIN_COLORS[ec];
+      return `<div style="display:flex;align-items:center;gap:6px;margin:3px 0;cursor:pointer" onclick="onTaskClick(TASKS.find(x=>x.id==='${t.id}'))">
+        <span style="width:6px;height:6px;border-radius:50%;background:${color};flex-shrink:0"></span>
+        <span style="font-size:11px;color:var(--text-muted)">${t.name}</span>
+        <span style="font-size:9px;color:var(--text-dim);margin-left:auto">${rd.bb}</span>
+      </div>`;
+    }).join('');
+  }
+
+  content.innerHTML = `
+    <div class="dp-title" style="color:${role.color}">${role.fullName}</div>
+    <div class="dp-row"><span class="dp-row-label">Salary</span><span class="dp-row-value">${role.salary}</span></div>
+    <div class="dp-row"><span class="dp-row-label">Hours</span><span class="dp-row-value">${role.hours}</span></div>
+    <div class="dp-row"><span class="dp-row-label">Tasks in graph</span><span class="dp-row-value">${roleTasks.length}</span></div>
+    <div class="dp-row"><span class="dp-row-label">Domains spanned</span><span class="dp-row-value">${Object.keys(byDomain).length}</span></div>
+    <div class="dp-section">
+      <div class="dp-section-title">All Tasks (by domain)</div>
+      ${domainsHTML}
+    </div>
+  `;
+  panel.classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detailPanel').classList.remove('open');
+  selectedTask = null;
+  selectedRole = null;
+  undimAll();
+  hideAssignEdges();
+}
+
+// ==================== VIEW MODE ====================
+function setViewMode(mode) {
+  viewMode = mode;
+  document.querySelectorAll('#viewModes .ctrl-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  // Re-color all task nodes
+  TASKS.forEach(t => {
+    const node = document.querySelector(`.task-node[data-id="${t.id}"] .task-rect`);
+    if (node) {
+      node.setAttribute('stroke', getTaskColor(t));
+      node.setAttribute('stroke-width', getTaskBorderWidth(t));
+    }
+  });
+  updateLegend();
+  updateSolvedVisuals();
+}
+
+function updateLegend() {
+  const title = document.getElementById('legendTitle');
+  const items = document.getElementById('legendItems');
+  if (viewMode === 'pain') {
+    title.textContent = 'Emotional Cost';
+    items.innerHTML = `
+      <div class="legend-item"><div class="legend-dot" style="background:#2D7A4F"></div>Low</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#D4A843"></div>Medium</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#E07A3A"></div>High</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#E05252"></div>Extreme</div>
+      <div class="legend-item" style="margin-left:12px"><div class="legend-dot" style="border:1.5px dashed #E05252;background:none;width:10px;height:10px"></div>No tool exists</div>
+    `;
+  } else if (viewMode === 'connectivity') {
+    title.textContent = 'Role Connections';
+    items.innerHTML = `
+      <div class="legend-item"><div class="legend-dot" style="background:#2D7A4F"></div>1 role</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#7078E0"></div>2 roles</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#D4A843"></div>3 roles</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#E07A3A"></div>4 roles</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#E05252"></div>5+ roles</div>
+    `;
+  } else if (viewMode === 'automation') {
+    title.textContent = 'Automation Readiness (inverted)';
+    items.innerHTML = `
+      <div class="legend-item"><div class="legend-dot" style="background:#E05252"></div>0-1 (hardest)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#E07A3A"></div>1-2</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#D4A843"></div>2-3</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#2D7A4F"></div>3+ (easiest)</div>
+    `;
+  } else if (viewMode === 'whitespace') {
+    title.textContent = 'Tool Whitespace';
+    items.innerHTML = `
+      <div class="legend-item"><div class="legend-dot" style="background:#E05252"></div>No tool exists</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#2A2A2E"></div>Tool exists</div>
+    `;
+  }
+}
+
+// ==================== ROLE FILTER ====================
+function initRoleFilters() {
+  const container = document.getElementById('roleFilters');
+  ROLE_KEYS.forEach(rk => {
+    const role = ROLES[rk];
+    const btn = document.createElement('button');
+    btn.className = 'role-filter active';
+    btn.style.borderColor = role.color;
+    btn.style.color = role.color;
+    btn.style.background = role.color + '15';
+    btn.textContent = role.name;
+    btn.dataset.role = rk;
+    btn.addEventListener('click', () => toggleRoleFilter(rk));
+    container.appendChild(btn);
+  });
+}
+
+function toggleRoleFilter(roleKey) {
+  activeRoles[roleKey] = !activeRoles[roleKey];
+  const btn = document.querySelector(`.role-filter[data-role="${roleKey}"]`);
+  btn.classList.toggle('active', activeRoles[roleKey]);
+  btn.style.background = activeRoles[roleKey] ? ROLES[roleKey].color + '15' : 'transparent';
+
+  // Update visibility
+  undimAll();
+  if (selectedTask) {
+    dimAll(0.15);
+    highlightTask(selectedTask);
+  }
+  if (selectedRole) {
+    dimAll(0.15);
+    highlightRole(selectedRole);
+  }
+}
+
+// ==================== SOLUTION LENS ====================
+function toggleSolutionLens() {
+  solutionLensActive = !solutionLensActive;
+  document.getElementById('solutionLensBtn').classList.toggle('active', solutionLensActive);
+  document.getElementById('solutionBar').classList.toggle('visible', solutionLensActive);
+  document.getElementById('legend').classList.toggle('shifted', solutionLensActive);
+  if (!solutionLensActive) {
+    solvedTasks.clear();
+    updateSolvedVisuals();
+  }
+  closeDetail();
+}
+
+function toggleSolved(taskId) {
+  if (solvedTasks.has(taskId)) solvedTasks.delete(taskId);
+  else solvedTasks.add(taskId);
+  updateSolvedVisuals();
+  updateSolutionStats();
+}
+
+function updateSolvedVisuals() {
+  if (!solutionLensActive) {
+    // Reset
+    TASKS.forEach(t => {
+      const rect = document.querySelector(`.task-node[data-id="${t.id}"] .task-rect`);
+      if (rect) {
+        rect.setAttribute('stroke-dasharray', t.noToolExists ? '4,2' : 'none');
+      }
+    });
+    return;
+  }
+
+  // Get cascade (downstream of solved)
+  const cascade = new Set();
+  function addDownstream(id) {
+    DEPENDENCIES.forEach(([from, to]) => {
+      if (from === id && !cascade.has(to) && !solvedTasks.has(to)) {
+        cascade.add(to);
+      }
+    });
+  }
+  solvedTasks.forEach(id => addDownstream(id));
+
+  TASKS.forEach(t => {
+    const node = document.querySelector(`.task-node[data-id="${t.id}"]`);
+    const rect = document.querySelector(`.task-node[data-id="${t.id}"] .task-rect`);
+    if (!node || !rect) return;
+    if (solvedTasks.has(t.id)) {
+      rect.setAttribute('stroke', '#2D7A4F');
+      rect.setAttribute('stroke-dasharray', '6,3');
+      rect.setAttribute('stroke-width', '2.5');
+      node.style.opacity = '1';
+    } else if (cascade.has(t.id)) {
+      rect.setAttribute('stroke', '#2D7A4F');
+      rect.setAttribute('stroke-dasharray', '3,3');
+      rect.setAttribute('stroke-width', '1.5');
+      node.style.opacity = '0.7';
+    } else {
+      rect.setAttribute('stroke', getTaskColor(t));
+      rect.setAttribute('stroke-dasharray', t.noToolExists ? '4,2' : 'none');
+      rect.setAttribute('stroke-width', getTaskBorderWidth(t));
+    }
+  });
+}
+
+function updateSolutionStats() {
+  const solved = solvedTasks.size;
+  const rolesAffected = new Set();
+  let totalBB = 0;
+  solvedTasks.forEach(id => {
+    const t = TASKS.find(x => x.id === id);
+    if (t) {
+      Object.keys(t.roles).forEach(r => rolesAffected.add(r));
+      Object.values(t.roles).forEach(rd => totalBB += Math.abs(rd.bb));
+    }
+  });
+
+  // Count downstream
+  const downstream = new Set();
+  function addDown(id) {
+    DEPENDENCIES.forEach(([from, to]) => {
+      if (from === id && !downstream.has(to) && !solvedTasks.has(to)) {
+        downstream.add(to);
+        addDown(to);
+      }
+    });
+  }
+  solvedTasks.forEach(id => addDown(id));
+
+  document.getElementById('sbSolved').textContent = solved;
+  document.getElementById('sbRoles').textContent = rolesAffected.size;
+  document.getElementById('sbDownstream').textContent = downstream.size;
+  document.getElementById('sbBudget').textContent = '+' + totalBB;
+}
+
+function resetSolution() {
+  solvedTasks.clear();
+  updateSolvedVisuals();
+  updateSolutionStats();
+}
+
+// ==================== CLICK OUTSIDE ====================
+document.getElementById('graphSvg').addEventListener('click', (e) => {
+  if (e.target === svg || e.target.tagName === 'svg') {
+    selectedTask = null;
+    selectedRole = null;
+    undimAll();
+    hideAssignEdges();
+    closeDetail();
+  }
+});
+
+// ==================== INIT ====================
+initRoleFilters();
+renderGraph();
+</script>
+</body>
+</html>
