@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UK Large-Format Grocery — Role Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --layer-pad: 16px;
+  --bg-base: #0F0F10;
+  --bg-surface: #151516;
+  --bg-elevated: #1F2023;
+  --bg-elevated-2: #232428;
+  --border-subtle: #26272B;
+  --border-visible: #35363A;
+  --border-muted: #2C2D31;
+  --text-primary: #EEEFF1;
+  --text-secondary: #8A8F98;
+  --text-tertiary: #5C5F66;
+  --accent: #5E6AD2;
+  --accent-hover: #6B76DC;
+  --accent-muted: rgba(94, 106, 210, 0.12);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.12);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.18);
+  --shadow-xl: 0 16px 48px rgba(0,0,0,0.25);
+  /* Tooltip: same hue as --bg-elevated-2 (#232428), slight transparency so nodes show through */
+  --bg-tooltip: rgba(35, 36, 40, 0.82);
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ease-default: cubic-bezier(0.16, 1, 0.3, 1);
+  --lv-above: #BB6BD9;
+  --lv-l1: #5E6AD2;
+  --lv-l2: #4A90D9;
+  --lv-l3: #4CB782;
+  --lv-l4: #6B6E76;
+  --lv-l5: #5C5F66;
+  /* Tension score colors */
+  --tension-low: #4CB782;
+  --tension-med: #E5A54B;
+  --tension-high: #E5534B;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--bg-base); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body { font-family: var(--font); color: var(--text-primary); background: var(--bg-base); min-height: 100vh; }
+
+/* --- Layout --- */
+.page { max-width: 1680px; margin: 0 auto; padding: 48px 32px 64px; }
+
+header { margin-bottom: 24px; }
+header h1 {
+  font-size: 20px; font-weight: 600; letter-spacing: -0.3px;
+  line-height: 28px; margin-bottom: 4px;
+}
+header .subtitle {
+  font-size: 13px; font-weight: 400; color: var(--text-secondary);
+  line-height: 20px; max-width: 600px;
+}
+header .meta {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 8px; padding: 4px 12px;
+  background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md); font-size: 11px; color: var(--text-tertiary);
+  line-height: 16px;
+}
+
+/* --- Canvas --- */
+.map-wrapper {
+  overflow: auto; border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl); background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+  flex: 1; min-width: 0;
+  padding: 16px 0 24px 0;
+}
+.canvas {
+  position: relative;
+  min-width: 1000px;
+  width: 100%;
+  min-height: 760px;
+}
+.canvas svg {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+}
+
+/* --- Layer bands --- */
+.layer {
+  position: absolute; border: 1px dashed var(--border-muted);
+  border-radius: var(--radius-lg); pointer-events: none; z-index: 0;
+}
+.layer-tag {
+  position: absolute;
+  left: var(--layer-pad);
+  top: var(--layer-pad);
+  padding: 2px 8px;
+  background: var(--bg-surface);
+  font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
+  text-transform: uppercase; color: var(--text-tertiary);
+  line-height: 14px;
+  border-radius: var(--radius-sm);
+}
+
+/* --- Nodes --- */
+.node {
+  position: absolute; width: 144px; height: 44px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 2px 12px;
+  cursor: default; z-index: 2;
+  transition: border-color 150ms ease, box-shadow 200ms var(--ease-default), opacity 150ms ease;
+}
+.node .label {
+  font-size: 12px; font-weight: 500; line-height: 16px;
+  color: var(--text-primary); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.node .headcount {
+  font-size: 10px; font-weight: 400; line-height: 14px;
+  color: var(--text-tertiary);
+}
+/* Tension bar (left side only) */
+.node::before {
+  content: ''; position: absolute; left: 0; top: 6px; bottom: 6px;
+  width: 3px; border-radius: 0 2px 2px 0;
+  background: var(--border-subtle);
+  transition: background 150ms ease;
+}
+.node[data-tension="low"]::before { background: var(--tension-low); }
+.node[data-tension="med"]::before { background: var(--tension-med); }
+.node[data-tension="high"]::before { background: var(--tension-high); }
+
+.node:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 4px 12px rgba(94,106,210,0.08);
+  z-index: 10;
+}
+
+/* --- SVG connections --- */
+.canvas svg path, .canvas svg line {
+  transition: opacity 150ms ease;
+}
+
+/* --- Highlight / dim --- */
+.canvas.active .node.dim { opacity: 0.1; }
+.canvas.active .node.lit { opacity: 1; }
+.canvas.active svg .dim { opacity: 0.04; }
+.canvas.active svg .lit { opacity: 1; stroke: var(--accent); }
+
+/* --- Tooltip --- */
+.tooltip {
+  position: absolute; display: none; z-index: 100;
+  background: var(--bg-tooltip);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-visible);
+  border-radius: var(--radius-lg);
+  padding: 12px 16px;
+  min-width: 220px; max-width: 296px;
+  box-shadow: var(--shadow-lg);
+  pointer-events: none;
+  animation: ttIn 150ms var(--ease-default);
+}
+@keyframes ttIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.tooltip .tt-title { font-size: 13px; font-weight: 600; line-height: 18px; margin-bottom: 2px; }
+.tooltip .tt-level { font-size: 12px; color: var(--text-secondary); line-height: 16px; margin-bottom: 8px; }
+.tooltip .tt-row { font-size: 12px; color: var(--text-secondary); line-height: 18px; }
+.tooltip .tt-row span { color: var(--text-primary); font-weight: 500; }
+.tooltip .tt-note {
+  font-size: 12px; color: var(--text-tertiary); margin-top: 8px;
+  line-height: 18px; border-top: 1px solid var(--border-subtle);
+  padding-top: 8px;
+}
+.tooltip .tt-tension {
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+.tooltip .tt-tension-header {
+  font-size: 12px; font-weight: 500; color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.tooltip .tt-tension-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11px; line-height: 18px;
+}
+.tooltip .tt-dim { color: var(--text-tertiary); }
+.tooltip .tt-bar {
+  font-family: monospace; font-size: 10px; letter-spacing: 1px;
+  color: var(--text-secondary);
+}
+
+/* --- Footer legend --- */
+.footer {
+  margin-top: 24px; display: flex; align-items: flex-start; gap: 32px;
+  padding: 16px; background: var(--bg-surface);
+  border: 1px solid var(--border-subtle); border-radius: var(--radius-lg);
+  flex-wrap: wrap;
+}
+.legend-group { display: flex; flex-direction: column; gap: 4px; }
+.legend-group .lg-title {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
+  text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 4px;
+}
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-secondary); }
+.li-bar { width: 3px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+.li-line { width: 24px; height: 0; flex-shrink: 0; }
+
+.hint {
+  margin-top: 12px; font-size: 11px; color: var(--text-tertiary); line-height: 16px;
+}
+
+/* --- Map + Sidebar layout --- */
+.map-container {
+  display: flex; gap: 24px; align-items: stretch;
+}
+
+/* --- Responsive --- */
+@media (max-width: 1100px) {
+  .map-container { flex-direction: column; }
+  .sidebar { width: 100%; max-width: 480px; }
+  .map-wrapper { width: 100%; }
+}
+@media (max-width: 900px) {
+  .page { padding: 24px 16px 32px; }
+  .canvas { min-width: 800px; }
+}
+
+/* --- Market Context Sidebar --- */
+.sidebar {
+  width: 264px; flex-shrink: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: 16px;
+}
+.sidebar-title {
+  font-size: 12px; font-weight: 600; color: var(--text-primary);
+  margin-bottom: 16px; letter-spacing: -0.2px;
+}
+.sidebar-section {
+  margin-bottom: 16px;
+}
+.sidebar-section:last-child { margin-bottom: 0; }
+.sidebar-section-title {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
+  text-transform: uppercase; color: var(--text-tertiary);
+  margin-bottom: 8px;
+}
+.sidebar-metric {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.sidebar-metric:last-child { border-bottom: none; }
+.sidebar-metric-label {
+  font-size: 11px; color: var(--text-secondary); line-height: 16px;
+}
+.sidebar-metric-value {
+  font-size: 11px; font-weight: 600; color: var(--text-primary);
+  text-align: right;
+}
+.sidebar-metric-value.negative { color: var(--tension-high); }
+.sidebar-metric-value.positive { color: var(--tension-low); }
+.sidebar-metric-value.warning { color: var(--tension-med); }
+.sidebar-source {
+  font-size: 10px; color: var(--text-tertiary); margin-top: 16px;
+  line-height: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle);
+}
+.sidebar-metric[data-tip] {
+  cursor: help;
+  transition: background 100ms ease;
+}
+.sidebar-metric[data-tip]:hover {
+  background: var(--accent-muted);
+  margin: 0 -8px; padding-left: 8px; padding-right: 8px;
+  border-radius: var(--radius-sm);
+}
+
+/* --- Sidebar tooltip --- */
+.sidebar-tip {
+  position: fixed; z-index: 200;
+  background: var(--bg-tooltip);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-visible);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  max-width: 260px;
+  font-size: 11px; line-height: 16px;
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-md);
+  pointer-events: none;
+  animation: ttIn 150ms var(--ease-default);
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <h1>UK Large-Format Grocery — Role Map</h1>
+    <p class="subtitle">Reporting hierarchy across large-format grocery stores. Hover any role to see its connections, headcount, pay band, and context.</p>
+    <div class="meta">23 roles · L0–L4 · Tesco Extra, Sainsbury's, Asda, Morrisons, Waitrose, M&S · Apr 2026</div>
+  </header>
+
+  <div class="map-container">
+    <div class="map-wrapper">
+      <div class="canvas" id="canvas">
+        <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-title">Market Pressure Context</div>
+      
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Cost Pressure (Apr 2025–2026)</div>
+        <div class="sidebar-metric" data-tip="Employer National Insurance contributions increased from 13.8% to 15%, plus lower threshold (£5K). Adds ~£7bn cost to UK retail sector annually.">
+          <span class="sidebar-metric-label">NI increase (UK retail)</span>
+          <span class="sidebar-metric-value negative">+£7bn</span>
+        </div>
+        <div class="sidebar-metric" data-tip="National Living Wage rose to £12.21/hr (Apr 2025). Direct wage cost increase across ~3M retail workers.">
+          <span class="sidebar-metric-label">NLW rise impact</span>
+          <span class="sidebar-metric-value negative">+£2.7bn/yr</span>
+        </div>
+        <div class="sidebar-metric" data-tip="Combined annual wage bills for Tesco, Sainsbury's, Asda, and Morrisons. Labour is 10–12% of revenue.">
+          <span class="sidebar-metric-label">Big Four wage bills</span>
+          <span class="sidebar-metric-value">~£17–19bn</span>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Workforce Crisis</div>
+        <div class="sidebar-metric" data-tip="Average annual staff turnover in UK retail. One of the highest across all sectors. Driven by low pay, poor conditions, and lack of progression.">
+          <span class="sidebar-metric-label">Annual turnover</span>
+          <span class="sidebar-metric-value warning">50.8%</span>
+        </div>
+        <div class="sidebar-metric" data-tip="Average cost to replace one retail employee including recruitment, training, and lost productivity during ramp-up.">
+          <span class="sidebar-metric-label">Replacement cost</span>
+          <span class="sidebar-metric-value">£30,614</span>
+        </div>
+        <div class="sidebar-metric" data-tip="Percentage of retail workers actively considering leaving their job (Retail Trust survey Q4 2025). Indicates ongoing retention pressure.">
+          <span class="sidebar-metric-label">Flight risk (Q4 2025)</span>
+          <span class="sidebar-metric-value negative">56%</span>
+        </div>
+        <div class="sidebar-metric" data-tip="Net retail job losses in 2024 due to store closures, automation, and restructuring programmes across major chains.">
+          <span class="sidebar-metric-label">Jobs lost (2024)</span>
+          <span class="sidebar-metric-value negative">–170,000</span>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Violence & Shrink</div>
+        <div class="sidebar-metric" data-tip="Recorded incidents of violence and abuse against retail workers (BRC Crime Survey). Up 55% year-on-year. Includes verbal abuse, threats, and physical assaults.">
+          <span class="sidebar-metric-label">Abuse incidents/yr</span>
+          <span class="sidebar-metric-value negative">737K (+55%)</span>
+        </div>
+        <div class="sidebar-metric" data-tip="Percentage of store workers who experienced abuse in the past 12 months (USDAW survey). Frontline and checkout roles most affected.">
+          <span class="sidebar-metric-label">Store workers abused</span>
+          <span class="sidebar-metric-value negative">78%</span>
+        </div>
+        <div class="sidebar-metric" data-tip="Total annual cost of retail crime including theft, fraud, violence, and security measures. Equivalent to ~1% of total UK retail sales.">
+          <span class="sidebar-metric-label">Total crime cost</span>
+          <span class="sidebar-metric-value negative">£4.2bn</span>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Delayering (2023–2026)</div>
+        <div class="sidebar-metric" data-tip="Department Manager and Team Leader roles eliminated at Tesco through 'Shift Leader' consolidation (2023–2024). Duties redistributed to fewer managers.">
+          <span class="sidebar-metric-label">Tesco L2 cuts</span>
+          <span class="sidebar-metric-value negative">~4,500</span>
+        </div>
+        <div class="sidebar-metric" data-tip="Store management restructure at Sainsbury's (2024). Reduced layers between Store Manager and shop floor.">
+          <span class="sidebar-metric-label">Sainsbury's cuts</span>
+          <span class="sidebar-metric-value negative">~6,300</span>
+        </div>
+        <div class="sidebar-metric" data-tip="Middle management reductions at Morrisons as part of post-acquisition efficiency programme.">
+          <span class="sidebar-metric-label">Morrisons cuts</span>
+          <span class="sidebar-metric-value negative">~750</span>
+        </div>
+        <div class="sidebar-metric" data-tip="Typical hourly pay difference between Team Leader and Colleague after NLW rises. Compresses incentive to take on management responsibility.">
+          <span class="sidebar-metric-label">Pay compression gap</span>
+          <span class="sidebar-metric-value warning">~£1/hr</span>
+        </div>
+      </div>
+
+      <div class="sidebar-source">
+        Sources: BRC, USDAW, Retail Trust, ONS, retailer FY results
+      </div>
+    </div>
+  </div>
+
+  <div class="footer" id="footer"></div>
+  <p class="hint">Hover a role card to highlight its reporting lines. Details appear in a tooltip.</p>
+
+  <div class="tooltip" id="tooltip"></div>
+
+</div>
+
+<script>
+/* W must match .node width in CSS (144px). H=44 to fit label + headcount. */
+const W = 144, H = 44;
+const CANVAS_W = 1000;
+const CANVAS_H = 760;
+/** Equal inset inside dashed layer frames (matches --layer-pad / tag height in CSS). */
+const LAYER_PAD = 16;
+const LAYER_GAP = 24;
+const LAYER_TAG_H = 18;
+const LAYER_PAD_TOP = LAYER_PAD + LAYER_TAG_H + LAYER_PAD;
+
+/*
+ * Tension Score breakdown (1-3 each, total 4-12):
+ *   tools: Tool fragmentation (systems used daily)
+ *   ctx:   Context switching frequency
+ *   dec:   Decision density per shift
+ *   err:   Error stakes (consequences of mistakes)
+ * Thresholds: 4-6 = low, 7-9 = med, 10-12 = high
+ */
+const roles = [
+  { id:'area_mgr',     label:'Area Manager',          lv:'L0', x:500, y:44,  n:'~750',     pay:'£55K–£80K+',     note:'Typically 10–31 stores per patch. Weekly visits. Informal WhatsApp pressure common across all retailers.',
+    tension:{ tools:2, ctx:2, dec:3, err:3, total:10, level:'high' }},
+  { id:'store_mgr',    label:'Store Manager',          lv:'L1', x:420, y:130, n:'~4,500',   pay:'£28K–£80K',      note:'P&L owner, compliance lead, people lead. Often the only integration layer across 6–12 fragmented systems.',
+    tension:{ tools:3, ctx:3, dec:3, err:3, total:12, level:'high' }},
+  { id:'deputy_sm',    label:'Deputy Store Mgr',        lv:'L1', x:580, y:130, n:'~4,500',   pay:'£30K–£55K',      note:'Covers for SM. Usually runs the store from mid-afternoon when SM leaves.',
+    tension:{ tools:3, ctx:3, dec:2, err:2, total:10, level:'high' }},
+  { id:'fresh_dm',     label:'Fresh Food Manager',     lv:'L2', x:116, y:228, n:'~8,000',   pay:'£26K–£48K',      note:'Perishables, waste, food safety. At Tesco: absorbed into Shift Leader model (2023).',
+    tension:{ tools:2, ctx:2, dec:3, err:3, total:10, level:'high' }},
+  { id:'ambient_dm',   label:'Ambient Manager',         lv:'L2', x:268, y:228, n:'~7,000',   pay:'£24K–£43K',      note:'Grocery ambient: planograms, shelf-edge pricing, availability. At Tesco: folded into Shift Leader.',
+    tension:{ tools:2, ctx:2, dec:2, err:2, total:8, level:'med' }},
+  { id:'checkout_mgr', label:'Checkout Manager',       lv:'L2', x:420, y:228, n:'~5,000',   pay:'£26K–£34K',      note:'Queues, cash, LP, SCO. At Tesco: removed 2018; duties sit with Shift Leader.',
+    tension:{ tools:2, ctx:3, dec:2, err:2, total:9, level:'med' }},
+  { id:'night_mgr',    label:'Night Manager',          lv:'L2', x:572, y:228, n:'~3,500',   pay:'£24K–£41K',      note:'Sole in-store authority 22:00–07:00. High isolation. Outcomes judged more than effort.',
+    tension:{ tools:2, ctx:1, dec:2, err:3, total:8, level:'med' }},
+  { id:'dotcom_mgr',   label:'Dotcom Manager',          lv:'L2', x:724, y:228, n:'~3,000',   pay:'£25K–£35K',      note:'Online / dotcom: pick accuracy, dispatch, drivers, SLAs.',
+    tension:{ tools:2, ctx:3, dec:3, err:2, total:10, level:'high' }},
+  { id:'nonfood_dm',   label:'Non-Food / GM Mgr',      lv:'L2', x:876, y:228, n:'varies',   pay:'£24K–£40K',      note:'Clothing, electricals, seasonal. At Tesco: folded into Shift Leader.',
+    tension:{ tools:2, ctx:2, dec:2, err:1, total:7, level:'med' }},
+  { id:'shift_leader', label:'Shift Leader',           lv:'L3', x:192, y:332, n:'~25,000',  pay:'£12.50–£15/hr',  note:'Operational backbone. Span of 20–40 colleagues. Post-2023 Tesco absorbed many former Lead DM duties.',
+    tension:{ tools:2, ctx:3, dec:3, err:2, total:10, level:'high' }},
+  { id:'service_tl',   label:'Service Team Leader',    lv:'L3', x:420, y:332, n:'~5,000',   pay:'£12.50–£15/hr',  note:'Checkouts, SCO, service desk.',
+    tension:{ tools:2, ctx:3, dec:2, err:2, total:9, level:'med' }},
+  { id:'night_tl',     label:'Night Team Leader',      lv:'L3', x:572, y:332, n:'~5,000',   pay:'£12.50–£15/hr+', note:'Reports to Night Manager. Limited management authority.',
+    tension:{ tools:2, ctx:1, dec:2, err:2, total:7, level:'med' }},
+  { id:'online_tl',    label:'Online Team Leader',     lv:'L3', x:724, y:332, n:'~3,000',   pay:'£12.50–£15/hr',  note:'Leads pickers and dispatch on shift.',
+    tension:{ tools:2, ctx:2, dec:2, err:2, total:8, level:'med' }},
+  { id:'ca_general',   label:'Customer Assistant',     lv:'L4', x:100, y:444, n:'~200,000', pay:'£12.21–£13.41/hr', note:'Core shop floor: fill, rotation, customer service.',
+    tension:{ tools:1, ctx:2, dec:1, err:1, total:5, level:'low' }},
+  { id:'baker',        label:'Baker',                  lv:'L4', x:252, y:444, n:'~10,000',  pay:'£12.01–£14.31/hr', note:'Scratch (Morrisons) vs bake-off (M&S). Semi-autonomous overnight.',
+    tension:{ tools:1, ctx:1, dec:1, err:2, total:5, level:'low' }},
+  { id:'butcher',      label:'Butcher',                lv:'L4', x:100, y:504, n:'~5,000',   pay:'£12.21–£14.31/hr', note:'Strong at Morrisons / Waitrose. Removed at Tesco / Sainsbury\'s.',
+    tension:{ tools:1, ctx:1, dec:1, err:2, total:5, level:'low' }},
+  { id:'fishmonger',   label:'Fishmonger',             lv:'L4', x:252, y:504, n:'~2,000',   pay:'£12.21–£14.31/hr', note:'Counter estate shrinking (e.g. Morrisons -35 fish counters, Mar 2025).',
+    tension:{ tools:1, ctx:1, dec:1, err:2, total:5, level:'low' }},
+  { id:'deli_counter', label:'Deli Counter',           lv:'L4', x:404, y:504, n:'~5,000',   pay:'£12.21–£14.31/hr', note:'Shrinking across most chains.',
+    tension:{ tools:1, ctx:1, dec:1, err:1, total:4, level:'low' }},
+  { id:'checkout_op',  label:'Checkout Operator',      lv:'L4', x:404, y:444, n:'~120,000', pay:'£12.21–£13.41/hr', note:'Declining headcount as SCO expands.',
+    tension:{ tools:1, ctx:2, dec:1, err:1, total:5, level:'low' }},
+  { id:'sco_host',     label:'SCO Host',               lv:'L4', x:556, y:444, n:'growing',  pay:'£12.21–£13.41/hr', note:'One host for 6–10 SCO machines. Growing role.',
+    tension:{ tools:1, ctx:2, dec:2, err:1, total:6, level:'low' }},
+  { id:'night_replen', label:'Night Replen.',           lv:'L4', x:708, y:444, n:'~50,000',  pay:'£12.21+prem',      note:'Night replenishment: overnight fill 23:00–05:00. Generalists, not fresh specialists.',
+    tension:{ tools:1, ctx:1, dec:1, err:1, total:4, level:'low' }},
+  { id:'online_pick',  label:'Online Picker',          lv:'L4', x:860, y:444, n:'~30,000',  pay:'£11.40–£13.41/hr', note:'~50 substitution decisions/day. Picks from same shelves as walk-in customers.',
+    tension:{ tools:1, ctx:1, dec:2, err:1, total:5, level:'low' }},
+  { id:'delivery_drv', label:'Delivery Driver',        lv:'L4', x:860, y:504, n:'~25,000',  pay:'£11.74–£14.45/hr', note:'Last mile. Customer-facing at the door.',
+    tension:{ tools:1, ctx:1, dec:2, err:1, total:5, level:'low' }},
+];
+
+/* Vertical layout: uniform inner padding (LAYER_PAD) and uniform gap (LAYER_GAP) between layer frames. */
+function applyLayerVerticalLayout() {
+  const ROW_GAP = LAYER_PAD;
+  const levels = ['L0', 'L1', 'L2', 'L3', 'L4'];
+  /* First card top must satisfy minY - LAYER_PAD_TOP >= LAYER_PAD so the L0 frame is not clipped at y=0 */
+  let contentTop = LAYER_PAD_TOP + LAYER_PAD;
+
+  for (const lv of levels) {
+    const inLv = roles.filter(r => r.lv === lv);
+    if (!inLv.length) continue;
+
+    if (lv === 'L4') {
+      const y1 = contentTop + H / 2;
+      const y2 = y1 + H + ROW_GAP;
+      const row2 = new Set(['butcher', 'fishmonger', 'deli_counter', 'delivery_drv']);
+      inLv.forEach(r => { r.y = row2.has(r.id) ? y2 : y1; });
+    } else {
+      const y = contentTop + H / 2;
+      inLv.forEach(r => { r.y = y; });
+    }
+
+    let maxB = -Infinity;
+    inLv.forEach(r => { maxB = Math.max(maxB, r.y + H / 2); });
+    contentTop = maxB + LAYER_PAD + LAYER_GAP + LAYER_PAD_TOP;
+  }
+}
+applyLayerVerticalLayout();
+
+const idx = {};
+roles.forEach(r => idx[r.id] = r);
+
+const treeDMs = ['fresh_dm','ambient_dm','checkout_mgr','night_mgr','dotcom_mgr','nonfood_dm'];
+
+const edges = [
+  ['fresh_dm','shift_leader'],
+  ['ambient_dm','shift_leader'],
+  ['checkout_mgr','service_tl'],
+  ['night_mgr','night_tl'],
+  ['dotcom_mgr','online_tl'],
+  ['nonfood_dm','shift_leader'],
+  ['shift_leader','ca_general'],
+  ['shift_leader','baker'],
+  ['shift_leader','butcher'],
+  ['shift_leader','fishmonger'],
+  ['shift_leader','deli_counter'],
+  ['service_tl','checkout_op'],
+  ['service_tl','sco_host'],
+  ['night_tl','night_replen'],
+  ['online_tl','online_pick'],
+  ['online_tl','delivery_drv'],
+];
+
+const layers = [
+  { lv:'L0', label:'Above Store',              color:'var(--lv-above)' },
+  { lv:'L1', label:'L1 · Store Leadership',    color:'var(--lv-l1)' },
+  { lv:'L2', label:'L2 · Department Management',color:'var(--lv-l2)' },
+  { lv:'L3', label:'L3 · Shift / Team Leadership',color:'var(--lv-l3)' },
+  { lv:'L4', label:'L4 · Frontline',           color:'var(--lv-l4)' },
+];
+
+const canvas = document.getElementById('canvas');
+const svg = document.getElementById('svg');
+const tt = document.getElementById('tooltip');
+const graph = {};
+
+function link(a, b) {
+  if (!graph[a]) graph[a] = new Set();
+  if (!graph[b]) graph[b] = new Set();
+  graph[a].add(b); graph[b].add(a);
+}
+
+function ns(tag, attrs) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [k,v] of Object.entries(attrs)) el.setAttribute(k, v);
+  return el;
+}
+
+function bez(x1,y1,x2,y2) {
+  const my = (y1+y2)/2;
+  return `M ${x1} ${y1} C ${x1} ${my}, ${x2} ${my}, ${x2} ${y2}`;
+}
+
+function bot(r) { return { x: r.x, y: r.y + H/2 }; }
+function top_(r){ return { x: r.x, y: r.y - H/2 }; }
+function right_(r){ return { x: r.x + W/2, y: r.y }; }
+function left_(r){ return { x: r.x - W/2, y: r.y }; }
+
+function lvName(lv) {
+  return { L0:'Above Store', L1:'Store Leadership', L2:'Department Management',
+           L3:'Shift / Team Leadership', L4:'Frontline' }[lv] || '';
+}
+
+/* ---- Build layers ---- */
+function buildLayers() {
+  layers.forEach(l => {
+    const inLv = roles.filter(r => r.lv === l.lv);
+    if (!inLv.length) return;
+    let minX=Infinity, maxX=-Infinity, minY=Infinity, maxY=-Infinity;
+    inLv.forEach(r => {
+      minX = Math.min(minX, r.x - W/2);
+      maxX = Math.max(maxX, r.x + W/2);
+      minY = Math.min(minY, r.y - H/2);
+      maxY = Math.max(maxY, r.y + H/2);
+    });
+    const el = document.createElement('div');
+    el.className = 'layer';
+    el.style.left = (minX - LAYER_PAD) + 'px';
+    el.style.top = (minY - LAYER_PAD_TOP) + 'px';
+    el.style.width = (maxX - minX + LAYER_PAD * 2) + 'px';
+    el.style.height = (maxY - minY + LAYER_PAD_TOP + LAYER_PAD) + 'px';
+
+    const tag = document.createElement('div');
+    tag.className = 'layer-tag';
+    tag.textContent = l.label;
+    el.appendChild(tag);
+    canvas.appendChild(el);
+  });
+}
+
+/* ---- Build tree SM → L2 ---- */
+function buildTree() {
+  const sm = idx['store_mgr'];
+  const jy = bot(sm).y + 32;
+  const dms = treeDMs.map(id => idx[id]);
+  const xs = dms.map(d => d.x);
+  const g = ns('g', {});
+
+  g.appendChild(ns('line', { x1:sm.x, y1:bot(sm).y, x2:sm.x, y2:jy, stroke:'var(--border-visible)', 'stroke-width':1.2, 'data-f':'store_mgr','data-t':'_tree' }));
+  g.appendChild(ns('line', { x1:Math.min(...xs), y1:jy, x2:Math.max(...xs), y2:jy, stroke:'var(--border-visible)', 'stroke-width':1.2, 'data-f':'store_mgr','data-t':'_tree' }));
+
+  dms.forEach(d => {
+    const t = top_(d);
+    g.appendChild(ns('line', { x1:d.x, y1:jy, x2:t.x, y2:t.y, stroke:'var(--border-visible)', 'stroke-width':1.2, 'data-f':'store_mgr','data-t':d.id }));
+    link('store_mgr', d.id);
+  });
+  svg.appendChild(g);
+
+  const dep = idx['deputy_sm'];
+  const p = ns('path', {
+    d: `M ${right_(sm).x} ${sm.y} Q ${(right_(sm).x + left_(dep).x)/2} ${sm.y+16}, ${left_(dep).x} ${dep.y}`,
+    fill:'none', stroke:'var(--border-visible)', 'stroke-width':1.2, 'data-f':'store_mgr','data-t':'deputy_sm'
+  });
+  svg.appendChild(p);
+  link('store_mgr','deputy_sm');
+}
+
+/* ---- Build edges ---- */
+function buildEdges() {
+  const am = idx['area_mgr'], sm = idx['store_mgr'];
+  svg.appendChild(ns('path', {
+    d: bez(bot(am).x, bot(am).y, top_(sm).x, top_(sm).y),
+    fill:'none', stroke:'var(--border-visible)', 'stroke-width':1.2, 'data-f':'area_mgr','data-t':'store_mgr'
+  }));
+  link('area_mgr','store_mgr');
+
+  edges.forEach(([fid,tid]) => {
+    const f = idx[fid], t = idx[tid];
+    svg.appendChild(ns('path', {
+      d: bez(bot(f).x, bot(f).y, top_(t).x, top_(t).y),
+      fill:'none', stroke:'var(--border-visible)', 'stroke-width':1.2, 'data-f':fid, 'data-t':tid
+    }));
+    link(fid,tid);
+  });
+}
+
+/* ---- Build nodes ---- */
+function buildNodes() {
+  roles.forEach(r => {
+    const el = document.createElement('div');
+    el.className = 'node';
+    el.dataset.id = r.id;
+    el.dataset.level = r.lv;
+    el.dataset.tension = r.tension?.level || 'low';
+    el.style.left = (r.x - W/2) + 'px';
+    el.style.top = (r.y - H/2) + 'px';
+    el.innerHTML = `<div class="label">${r.label}</div><div class="headcount">${r.n || ''}</div>`;
+    el.addEventListener('mouseenter', () => enter(r));
+    el.addEventListener('mouseleave', leave);
+    canvas.appendChild(el);
+  });
+}
+
+/* ---- Interaction ---- */
+function enter(r) {
+  canvas.classList.add('active');
+  const nbrs = graph[r.id] || new Set();
+
+  canvas.querySelectorAll('.node').forEach(el => {
+    const match = el.dataset.id === r.id || nbrs.has(el.dataset.id);
+    el.classList.toggle('lit', match);
+    el.classList.toggle('dim', !match);
+  });
+  svg.querySelectorAll('path, line').forEach(el => {
+    const f = el.dataset.f, t = el.dataset.t;
+    const match = f === r.id || t === r.id
+      || (f === 'store_mgr' && t === '_tree' && (r.id === 'store_mgr' || treeDMs.includes(r.id)));
+    el.classList.toggle('lit', match);
+    el.classList.toggle('dim', !match);
+  });
+
+  tt.style.display = 'block';
+  const t = r.tension || {};
+  const tensionLabel = { low:'Low', med:'Medium', high:'High' }[t.level] || '—';
+  const tensionColor = { low:'var(--tension-low)', med:'var(--tension-med)', high:'var(--tension-high)' }[t.level] || 'var(--text-tertiary)';
+  const bar = (v) => '█'.repeat(v) + '░'.repeat(3-v);
+  tt.innerHTML = `
+    <div class="tt-title">${r.label}</div>
+    <div class="tt-level">${r.lv} · ${lvName(r.lv)}</div>
+    <div class="tt-row">Headcount (UK est.): <span>${r.n || '—'}</span></div>
+    <div class="tt-row">Pay band: <span>${r.pay || '—'}</span></div>
+    <div class="tt-tension">
+      <div class="tt-tension-header">Tension: <span style="color:${tensionColor}">${tensionLabel}</span></div>
+      <div class="tt-tension-row"><span class="tt-dim">Tool fragmentation</span> <span class="tt-bar">${bar(t.tools||0)}</span></div>
+      <div class="tt-tension-row"><span class="tt-dim">Context switching</span> <span class="tt-bar">${bar(t.ctx||0)}</span></div>
+      <div class="tt-tension-row"><span class="tt-dim">Decision density</span> <span class="tt-bar">${bar(t.dec||0)}</span></div>
+      <div class="tt-tension-row"><span class="tt-dim">Error stakes</span> <span class="tt-bar">${bar(t.err||0)}</span></div>
+    </div>
+    ${r.note ? '<div class="tt-note">' + r.note + '</div>' : ''}
+  `;
+
+  let tx = r.x + W/2 + 16, ty = r.y - H/2;
+    if (tx + 300 > CANVAS_W) tx = r.x - W/2 - 300;
+    if (ty + 180 > CANVAS_H) ty = CANVAS_H - 190;
+    if (ty < 8) ty = 8;
+  tt.style.left = tx + 'px';
+  tt.style.top = ty + 'px';
+}
+
+function leave() {
+  canvas.classList.remove('active');
+  canvas.querySelectorAll('.node').forEach(el => el.classList.remove('lit','dim'));
+  svg.querySelectorAll('path, line').forEach(el => el.classList.remove('lit','dim'));
+  tt.style.display = 'none';
+}
+
+/* ---- Legend ---- */
+function buildLegend() {
+  const f = document.getElementById('footer');
+  f.innerHTML = `
+    <div class="legend-group">
+      <div class="lg-title">Tension</div>
+      <div class="legend-item"><div class="li-bar" style="background:var(--tension-high)"></div>High — tool overload, frequent interrupts, high error stakes</div>
+      <div class="legend-item"><div class="li-bar" style="background:var(--tension-med)"></div>Medium — moderate load across dimensions</div>
+      <div class="legend-item"><div class="li-bar" style="background:var(--tension-low)"></div>Low — simpler workflows, fewer decisions</div>
+    </div>
+    <div class="legend-group">
+      <div class="lg-title">Lines</div>
+      <div class="legend-item"><div class="li-line" style="border-top:1.2px solid var(--border-visible)"></div>Reporting line</div>
+      <div class="legend-item"><div class="li-line" style="border-top:1.2px dashed var(--border-muted)"></div>Layer boundary</div>
+    </div>
+  `;
+}
+
+/* ---- Sidebar tooltips ---- */
+function initSidebarTips() {
+  const sidebar = document.getElementById('sidebar');
+  let tipEl = null;
+  
+  sidebar.querySelectorAll('.sidebar-metric[data-tip]').forEach(metric => {
+    metric.addEventListener('mouseenter', (e) => {
+      const tip = metric.dataset.tip;
+      if (!tip) return;
+      
+      tipEl = document.createElement('div');
+      tipEl.className = 'sidebar-tip';
+      tipEl.textContent = tip;
+      document.body.appendChild(tipEl);
+      
+      const rect = metric.getBoundingClientRect();
+      let left = rect.left - tipEl.offsetWidth - 12;
+      let top = rect.top;
+      
+      // If too far left, show on right or below
+      if (left < 8) {
+        left = rect.right + 12;
+      }
+      // Keep in viewport
+      if (left + tipEl.offsetWidth > window.innerWidth - 8) {
+        left = rect.left;
+        top = rect.bottom + 8;
+      }
+      if (top + tipEl.offsetHeight > window.innerHeight - 8) {
+        top = window.innerHeight - tipEl.offsetHeight - 8;
+      }
+      
+      tipEl.style.left = left + 'px';
+      tipEl.style.top = top + 'px';
+    });
+    
+    metric.addEventListener('mouseleave', () => {
+      if (tipEl) {
+        tipEl.remove();
+        tipEl = null;
+      }
+    });
+  });
+}
+
+/* ---- Init ---- */
+buildLayers();
+buildTree();
+buildEdges();
+buildNodes();
+buildLegend();
+initSidebarTips();
+</script>
+</body>
+</html>
