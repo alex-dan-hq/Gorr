@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A store execution layer that turns fragmented shift reality into structured handover, prioritised work, live execution visibility and evidence-backed management control.</title>
+<style>
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #f7f7f4;
+  --surface: #f2f1ed;
+  --surface-2: #ebeae5;
+  --surface-3: #e6e5e0;
+  --text: #26251e;
+  --muted: #7a7974;
+  --faint: #8d8c87;
+  --border: #e2e2df;
+  --border-soft: #ecece8;
+  --border-strong: #cecec9;
+  --cursor-accent: #eb5600;
+  --blue: #4c70ad;
+  --teal: #4f8588;
+  --indigo: #746d9e;
+  --orange: #a4754d;
+  --green: #5b8264;
+  --mono: "Berkeley Mono", "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  background: var(--bg);
+  font-family: system-ui, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  letter-spacing: 0;
+}
+
+.page {
+  min-height: 100vh;
+  overflow: visible;
+  padding: 76px 24px 24px;
+}
+
+.canvas-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  width: 100vw;
+  min-height: 52px;
+  margin: 0;
+  padding: 0 24px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.canvas-nav-label {
+  padding: 0 24px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.canvas-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+  min-width: 0;
+}
+
+.canvas-tab {
+  position: relative;
+  min-width: 0;
+  min-height: 52px;
+  padding: 0 16px;
+  overflow: hidden;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.canvas-tab:hover {
+  color: var(--text);
+}
+
+.canvas-tab:focus-visible {
+  outline: 1px solid var(--border-strong);
+  outline-offset: -4px;
+}
+
+.canvas-tab[aria-pressed="true"] {
+  color: var(--cursor-accent);
+  background: transparent;
+}
+
+.canvas-tab[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  right: 16px;
+  bottom: 0;
+  left: 16px;
+  height: 2px;
+  background: var(--cursor-accent);
+}
+
+.tab-index {
+  margin-right: 6px;
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.canvas-progress {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.canvas-progress span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--text);
+  opacity: 0.18;
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.spine-panel,
+.system-panel {
+  min-width: 3340px;
+  margin: 0 auto 24px;
+  padding: 24px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.spine-panel {
+  padding-top: 32px;
+}
+
+.spine-header,
+.system-header,
+.board-intro {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 32px;
+  margin-bottom: 24px;
+}
+
+.spine-header h1,
+.system-header h2,
+.board-intro h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1.3;
+  font-weight: 400;
+}
+
+.spine-header > div:first-child {
+  max-width: 1320px;
+}
+
+.spine-header h1 {
+  margin-top: 0;
+  font-size: 34px;
+  line-height: 1.2;
+  font-weight: 400;
+}
+
+.spine-header p,
+.system-header p,
+.board-intro p {
+  max-width: 720px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.spine-header .product-thesis {
+  max-width: 1180px;
+  margin-top: 12px;
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.market-context {
+  min-width: 3340px;
+  margin: 0 auto 40px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.market-context-header {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: stretch;
+  padding: 0;
+}
+
+.market-context-header > div:first-child {
+  grid-column: 1 / 3;
+  padding: 16px 24px;
+}
+
+.section-label {
+  margin: 0;
+  color: var(--faint);
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.market-context-header h2,
+.technology-header h2 {
+  max-width: 1120px;
+  margin: 7px 0 0;
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1.3;
+  font-weight: 400;
+}
+
+.market-context-intro {
+  display: flex;
+  grid-column: 3 / 5;
+  align-items: center;
+  max-width: none;
+  margin: 0;
+  padding: 16px 24px;
+  color: var(--muted);
+  border-left: 1px solid var(--border-soft);
+  border-right: 1px solid var(--border-soft);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.context-meta {
+  grid-column: 5 / 6;
+  margin: 0;
+  padding: 16px 24px;
+}
+
+.context-meta div {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 12px;
+  padding: 4px 0;
+  border-top: 1px solid var(--border-soft);
+}
+
+.context-meta dt,
+.context-meta dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  line-height: 1.4;
+}
+
+.context-meta dt {
+  color: var(--faint);
+  text-transform: uppercase;
+}
+
+.context-meta dd {
+  color: var(--muted);
+}
+
+.market-fact-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border-top: 1px solid var(--border-soft);
+}
+
+.market-fact-group {
+  position: relative;
+  min-height: 248px;
+  padding: 24px;
+  border-right: 1px solid var(--border-soft);
+}
+
+.market-fact-group:last-child {
+  border-right: 0;
+}
+
+.market-fact-group::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 24px;
+  width: 40px;
+  height: 2px;
+  background: var(--border-strong);
+}
+
+.fact-group-title {
+  margin: 0 0 16px;
+  color: var(--faint);
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.fact-list {
+  margin: 0;
+}
+
+.fact-row {
+  display: grid;
+  grid-template-columns: minmax(0, 220px) max-content;
+  justify-content: start;
+  gap: 8px 16px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border-soft);
+}
+
+.fact-row dt {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.38;
+}
+
+.fact-row dd {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.38;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.source-line {
+  margin: 12px 0 0;
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 9.5px;
+  line-height: 1.45;
+}
+
+.market-sequence {
+  border-top: 1px solid var(--border-soft);
+}
+
+.sequence-header {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: end;
+  padding: 0;
+}
+
+.sequence-header .section-label {
+  grid-column: 1 / 3;
+  padding: 16px 24px;
+}
+
+.sequence-header p:last-child {
+  grid-column: 3 / 6;
+  max-width: none;
+  margin: 0;
+  padding: 16px 24px;
+  border-left: 1px solid var(--border-soft);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.sequence-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border-top: 1px solid var(--border-soft);
+}
+
+.sequence-event {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 16px;
+  min-height: 80px;
+  padding: 16px 24px;
+  border-right: 1px solid var(--border-soft);
+}
+
+.sequence-event:last-child {
+  border-right: 0;
+}
+
+.sequence-date {
+  display: block;
+  margin: 0;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.48;
+}
+
+.sequence-event p {
+  max-width: 520px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.48;
+}
+
+.timeline-intro {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  margin: 24px 0 16px;
+}
+
+.timeline-intro h2 {
+  margin: 6px 0 0;
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.timeline-intro p:last-child {
+  max-width: 620px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: right;
+}
+
+.product-spans {
+  display: grid;
+  grid-template-columns: repeat(25, minmax(0, 1fr));
+}
+
+.time-axis {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(25, minmax(0, 1fr));
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid var(--border-soft);
+  border-radius: 4px 4px 0 0;
+  background: var(--surface);
+}
+
+.time-axis::before {
+  content: "";
+  position: absolute;
+  top: 34px;
+  left: 22px;
+  right: 22px;
+  height: 2px;
+  background: var(--border-strong);
+  opacity: 0.7;
+}
+
+.time-axis::after {
+  content: "";
+  position: absolute;
+  top: 31px;
+  right: 18px;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid var(--border-strong);
+  border-right: 2px solid var(--border-strong);
+  transform: rotate(45deg);
+  opacity: 0.7;
+}
+
+.time-cell {
+  position: relative;
+  min-height: 76px;
+  padding: 12px 10px 10px;
+  color: var(--text);
+  border-right: 1px solid var(--border-soft);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.2;
+  font-weight: 500;
+  text-align: center;
+}
+
+.time-cell::before,
+.time-cell::after {
+  content: "";
+  position: absolute;
+  top: 29px;
+  width: 1px;
+  height: 12px;
+  background: var(--border-strong);
+}
+
+.time-cell::before {
+  left: 0;
+}
+
+.time-cell::after {
+  right: 0;
+}
+
+.time-cell:last-child {
+  border-right: 0;
+}
+
+.time-cell span {
+  display: block;
+  margin-top: 30px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.time-cell small {
+  display: block;
+  margin-top: 3px;
+  color: var(--faint);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.time-closing { grid-column: 1 / 2; }
+.time-night { grid-column: 2 / 10; }
+.time-handover { grid-column: 10 / 11; }
+.time-morning { grid-column: 11 / 14; }
+.time-trading { grid-column: 14 / 18; }
+.time-midday { grid-column: 18 / 19; }
+.time-evening { grid-column: 19 / 25; }
+.time-next { grid-column: 25 / 26; }
+
+.product-spans {
+  position: relative;
+  gap: 8px 0;
+  padding: 16px 0 4px;
+  border-right: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+  border-left: 1px solid var(--border-soft);
+  border-radius: 0 0 4px 4px;
+}
+
+.product-spans::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0,
+    transparent calc(4% - 0.5px),
+    var(--border-soft) calc(4% - 0.5px),
+    var(--border-soft) calc(4% + 0.5px),
+    transparent calc(4% + 0.5px),
+    transparent 4%
+  );
+  pointer-events: none;
+}
+
+.span-bar {
+  position: relative;
+  z-index: 1;
+  min-height: 48px;
+  padding: 12px 16px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.22;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.span-bar span {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.span-wedge { --accent: var(--blue); grid-column: 1 / 11; grid-row: 1; }
+.span-morning { --accent: var(--teal); grid-column: 10 / 14; grid-row: 2; }
+.span-execution { --accent: var(--indigo); grid-column: 12 / 25; grid-row: 3; }
+.span-labour { --accent: var(--orange); grid-column: 11 / 25; grid-row: 4; }
+.span-management { --accent: var(--green); grid-column: 1 / 26; grid-row: 5; }
+
+.system-panel {
+  display: block;
+}
+
+.loop-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.loop-card {
+  position: relative;
+  min-height: 128px;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 4px;
+}
+
+.loop-card::before {
+  content: "";
+  position: absolute;
+  top: 16px;
+  bottom: 16px;
+  left: 0;
+  width: 3px;
+  background: var(--accent);
+}
+
+.loop-route {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+.loop-route span {
+  min-width: 0;
+}
+
+.route-to {
+  color: var(--faint);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.loop-signal {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.loop-signal dt {
+  color: var(--faint);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.loop-signal dd {
+  margin: 0;
+  color: var(--muted);
+}
+
+.loop-card:nth-child(1) { --accent: var(--indigo); }
+.loop-card:nth-child(2) { --accent: var(--orange); }
+.loop-card:nth-child(3) { --accent: var(--blue); }
+.loop-card:nth-child(4) { --accent: var(--green); }
+
+.board {
+  min-width: 3340px;
+  margin: 0 auto 40px;
+  padding: 32px 24px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.technology-panel {
+  min-width: 3340px;
+  margin: 0 auto 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.technology-header {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: stretch;
+  padding: 0;
+}
+
+.technology-header > div:first-child {
+  grid-column: 1 / 3;
+  padding: 16px 24px;
+}
+
+.technology-header > p {
+  display: flex;
+  grid-column: 3 / 6;
+  align-items: center;
+  max-width: none;
+  margin: 0;
+  padding: 16px 24px;
+  color: var(--muted);
+  border-left: 1px solid var(--border-soft);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.technology-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  border-top: 1px solid var(--border-soft);
+}
+
+.technology-table .date-col { width: 132px; }
+.technology-table .retailer-col { width: 180px; }
+.technology-table .initiative-col { width: 420px; }
+.technology-table .scale-col { width: 1060px; }
+
+.technology-table th,
+.technology-table td {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-soft);
+  vertical-align: top;
+  text-align: left;
+}
+
+.technology-table th {
+  color: var(--faint);
+  font-size: 11px;
+  line-height: 1.3;
+  font-weight: 500;
+}
+
+.technology-table td {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.technology-table td:nth-child(1),
+.technology-table td:nth-child(2) {
+  color: var(--text);
+}
+
+.technology-note {
+  margin: 0;
+  padding: 16px 24px;
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 9.5px;
+  line-height: 1.45;
+}
+
+.lanes {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.lane {
+  display: flex;
+  flex-direction: column;
+  min-width: 620px;
+  padding: 0 0 8px;
+  --accent: var(--blue);
+}
+
+.lane:nth-child(2) {
+  --accent: var(--teal);
+}
+
+.lane:nth-child(3) {
+  --accent: var(--indigo);
+}
+
+.lane:nth-child(4) {
+  --accent: var(--orange);
+}
+
+.lane:nth-child(5) {
+  --accent: var(--green);
+}
+
+.context {
+  position: relative;
+  min-height: 48px;
+  margin: 0 0 16px;
+  padding: 2px 0 0 16px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.52;
+}
+
+.context::before {
+  content: "";
+  position: absolute;
+  top: 7px;
+  bottom: 8px;
+  left: 0;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 0;
+}
+
+.context strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.lane-title {
+  position: sticky;
+  top: 76px;
+  z-index: 12;
+  display: grid;
+  place-items: center;
+  min-height: 72px;
+  margin: 0 0 16px;
+  padding: 16px 24px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--accent);
+  border-radius: 4px;
+  box-shadow: none;
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 400;
+  text-align: center;
+}
+
+.state-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 58px minmax(0, 1fr);
+  align-items: stretch;
+  min-height: 192px;
+  margin: 0 0 24px;
+  padding: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.state {
+  padding: 24px;
+  background: transparent;
+}
+
+.state:first-child {
+  border-right: 1px solid var(--border);
+}
+
+.state:last-child {
+  border-left: 1px solid var(--border);
+}
+
+.state h3 {
+  margin: 0 0 12px;
+  padding: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.state p {
+  margin: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.52;
+}
+
+.arrow {
+  position: relative;
+  align-self: center;
+  height: 38px;
+  margin: 0 8px;
+}
+
+.arrow::before {
+  content: "";
+  position: absolute;
+  top: 18px;
+  left: 0;
+  right: 10px;
+  height: 2px;
+  background: var(--accent);
+  opacity: 0.62;
+}
+
+.arrow::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  right: 0;
+  width: 18px;
+  height: 18px;
+  border-top: 2px solid var(--accent);
+  border-right: 2px solid var(--accent);
+  opacity: 0.62;
+  transform: rotate(45deg);
+}
+
+.tasks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 16px;
+  row-gap: 16px;
+  padding: 0;
+}
+
+.task-sequence-label {
+  position: sticky;
+  top: 158px;
+  z-index: 10;
+  min-height: 30px;
+  padding: 8px 12px;
+  color: var(--muted);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.task-sequence-label:nth-child(1) {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.task-sequence-label:nth-child(2) {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.tasks .task:nth-of-type(1) { grid-column: 1; grid-row: 2; }
+.tasks .task:nth-of-type(2) { grid-column: 2; grid-row: 2; }
+.tasks .task:nth-of-type(3) { grid-column: 1; grid-row: 3; }
+.tasks .task:nth-of-type(4) { grid-column: 2; grid-row: 3; }
+.tasks .task:nth-of-type(5) { grid-column: 1; grid-row: 4; }
+.tasks .task:nth-of-type(6) { grid-column: 2; grid-row: 4; }
+
+.task {
+  display: flex;
+  flex-direction: column;
+  min-height: 300px;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 4px;
+  box-shadow: none;
+}
+
+.task h3 {
+  margin: 0 0 16px;
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+.task h4,
+.task p {
+  margin: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.task h4 {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.task ul {
+  margin: 0 0 24px;
+  padding-left: 18px;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.task li {
+  margin: 0 0 5px;
+  padding-left: 1px;
+}
+
+.need {
+  margin: auto -24px -24px;
+  padding: 16px 24px 24px;
+  background: transparent;
+  border-top: 1px solid var(--border);
+}
+
+.need p {
+  line-height: 1.48;
+}
+
+.core {
+  margin: auto 0 0;
+  padding-top: 32px;
+}
+
+.core h3 {
+  margin: 0 0 16px;
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.24;
+  font-weight: 500;
+}
+
+.core ol {
+  margin: 0;
+  padding: 16px 16px 16px 40px;
+  color: var(--text);
+  background: transparent;
+  border-left: 2px solid var(--accent);
+  font-size: 14px;
+  line-height: 1.56;
+}
+
+.core li {
+  padding-left: 2px;
+}
+
+.lane:nth-child(4) .core,
+.lane:nth-child(5) .core {
+  margin-top: auto;
+}
+
+@media (max-width: 900px) {
+  .page {
+    padding: 68px 12px 12px;
+  }
+
+  .canvas-nav {
+    top: 0;
+    left: 0;
+    grid-template-columns: 1fr;
+    width: 100vw;
+    padding: 0 12px;
+  }
+
+  .canvas-nav-label {
+    display: none;
+  }
+
+  .canvas-tabs {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .canvas-tab {
+    flex: 0 0 142px;
+  }
+
+  .spine-header > div:first-child,
+  .system-header > div:first-child,
+  .board-intro > div:first-child {
+    max-width: calc(100vw - 66px);
+  }
+
+  .spine-header h1 {
+    font-size: 28px;
+    line-height: 1.25;
+  }
+
+  .lane-title {
+    top: 64px;
+  }
+
+  .task-sequence-label {
+    top: 146px;
+  }
+}
+</style>
+</head>
+<body>
+<main class="page">
+  <nav class="canvas-nav" aria-label="Product layer navigation">
+    <span class="canvas-nav-label">Explore canvas</span>
+    <div class="canvas-tabs">
+      <button class="canvas-tab" type="button" data-target="lane-wedge" aria-pressed="true"><span class="tab-index">01</span>Handover</button>
+      <button class="canvas-tab" type="button" data-target="lane-morning" aria-pressed="false"><span class="tab-index">02</span>Morning</button>
+      <button class="canvas-tab" type="button" data-target="lane-execution" aria-pressed="false"><span class="tab-index">03</span>Execution</button>
+      <button class="canvas-tab" type="button" data-target="lane-labour" aria-pressed="false"><span class="tab-index">04</span>Labour</button>
+      <button class="canvas-tab" type="button" data-target="lane-management" aria-pressed="false"><span class="tab-index">05</span>Management</button>
+    </div>
+    <div class="canvas-progress" aria-hidden="true"><span></span></div>
+  </nav>
+
+  <section class="market-context" aria-labelledby="market-context-title">
+    <div class="market-context-header">
+      <div>
+        <p class="section-label">UK grocery operating context / 2025-2027</p>
+        <h2 id="market-context-title">Labour costs, employment requirements, management structures and store technology programmes are changing concurrently.</h2>
+      </div>
+      <p class="market-context-intro">The figures below combine UK policy changes, retailer announcements and industry surveys. Dates and source types are shown so externally reported facts remain separate from derived estimates and internal operating research.</p>
+      <dl class="context-meta">
+        <div><dt>Market</dt><dd>UK grocery retail</dd></div>
+        <div><dt>Period</dt><dd>2025-2027</dd></div>
+        <div><dt>Coverage</dt><dd>Policy / workforce / operations</dd></div>
+      </dl>
+    </div>
+    <div class="market-fact-grid" aria-label="UK grocery market facts">
+      <article class="market-fact-group">
+        <h3 class="fact-group-title">Labour cost changes</h3>
+        <dl class="fact-list">
+          <div class="fact-row"><dt>Employer NIC rate</dt><dd>13.8% -&gt; 15%</dd></div>
+          <div class="fact-row"><dt>NIC earnings threshold</dt><dd>GBP 9,100 -&gt; 5,000</dd></div>
+          <div class="fact-row"><dt>National Living Wage</dt><dd>GBP 12.21 -&gt; 12.71</dd></div>
+          <div class="fact-row"><dt>Estimated annual NI cost to UK retail</dt><dd>GBP 7bn</dd></div>
+        </dl>
+        <p class="source-line">Effective dates: NIC 6 Apr 2025; NLW Apr 2026. Sources: UK Government, BRC.</p>
+      </article>
+      <article class="market-fact-group">
+        <h3 class="fact-group-title">Reported annual NIC exposure</h3>
+        <dl class="fact-list">
+          <div class="fact-row"><dt>Tesco</dt><dd>GBP 235-250m</dd></div>
+          <div class="fact-row"><dt>Morrisons</dt><dd>GBP 200m</dd></div>
+          <div class="fact-row"><dt>Sainsbury's</dt><dd>GBP 140m</dd></div>
+          <div class="fact-row"><dt>M&amp;S</dt><dd>GBP 120m</dd></div>
+        </dl>
+        <p class="source-line">Sources: retailer reporting, Reuters and Morgan Stanley estimates.</p>
+      </article>
+      <article class="market-fact-group">
+        <h3 class="fact-group-title">Observed retailer responses</h3>
+        <dl class="fact-list">
+          <div class="fact-row"><dt>Raised prices after April 2025</dt><dd>85%</dd></div>
+          <div class="fact-row"><dt>Expected further price increases</dt><dd>65%</dd></div>
+          <div class="fact-row"><dt>Froze hiring</dt><dd>42%</dd></div>
+          <div class="fact-row"><dt>Reduced in-store staffing</dt><dd>38%</dd></div>
+        </dl>
+        <p class="source-line">Source: BRC CFO survey, July 2025.</p>
+      </article>
+      <article class="market-fact-group">
+        <h3 class="fact-group-title">Workforce and management structure</h3>
+        <dl class="fact-list">
+          <div class="fact-row"><dt>UK retail employment, Sep 2025</dt><dd>2.76m</dd></div>
+          <div class="fact-row"><dt>Change since 2015</dt><dd>-383,000</dd></div>
+          <div class="fact-row"><dt>Tesco / Sainsbury's roles affected</dt><dd>~4,500+ / ~6,300+</dd></div>
+          <div class="fact-row"><dt>Asda / Morrisons roles affected</dt><dd>~1,500+ / ~750+</dd></div>
+        </dl>
+        <p class="source-line">Sources: retailer announcements, Reuters, BBC and UK grocery restructuring synthesis.</p>
+      </article>
+      <article class="market-fact-group">
+        <h3 class="fact-group-title">Regulation, crime and operational risk</h3>
+        <dl class="fact-list">
+          <div class="fact-row"><dt>Theft incidents, 2023/24</dt><dd>20m+</dd></div>
+          <div class="fact-row"><dt>Theft / prevention cost</dt><dd>GBP 2.2bn / 1.8bn</dd></div>
+          <div class="fact-row"><dt>Violence and abuse incidents</dt><dd>737,000</dd></div>
+          <div class="fact-row"><dt>Employment Rights Act rollout</dt><dd>2026-2027</dd></div>
+        </dl>
+        <p class="source-line">Sources: BRC Crime Survey 2025 and UK Government implementation guidance.</p>
+      </article>
+    </div>
+    <div class="market-sequence" aria-label="Sequence of market changes">
+      <div class="sequence-header">
+        <p class="section-label">Sequence of reported changes</p>
+        <p>Calendar dates below describe the external market context and are not proportional to the 24-hour product timeline.</p>
+      </div>
+      <div class="sequence-grid">
+        <article class="sequence-event"><time class="sequence-date" datetime="2025-04">Apr 2025</time><p>Employer NIC increased to 15%; the earnings threshold reduced to GBP 5,000.</p></article>
+        <article class="sequence-event"><time class="sequence-date" datetime="2025-07">Jul 2025</time><p>BRC CFO survey recorded price increases, hiring freezes and reductions in store staffing.</p></article>
+        <article class="sequence-event"><time class="sequence-date" datetime="2025-09">Sep 2025</time><p>UK retail employment recorded at 2.76 million, the lowest figure in the research series.</p></article>
+        <article class="sequence-event"><time class="sequence-date" datetime="2026-04">Apr 2026</time><p>NLW increased to GBP 12.71; initial Employment Rights Act provisions entered implementation.</p></article>
+        <article class="sequence-event"><time class="sequence-date" datetime="2026-10">Oct 2026-2027</time><p>Further employment provisions are scheduled across dismissal, union access, guaranteed hours and shift cancellation.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="spine-panel" aria-label="Store operating spine">
+    <div class="spine-header">
+      <div>
+        <h1>Operating Model / One Store Day</h1>
+        <p class="product-thesis">A store execution layer that turns fragmented shift reality into structured handover, prioritised work, live execution visibility and evidence-backed management control.</p>
+        <p>Time is the backbone. Product layers sit on the day where they operate, so handover, labour, execution and management form one continuous system.</p>
+      </div>
+    </div>
+
+    <div class="timeline-intro">
+      <div>
+        <p class="section-label">Product coverage / 24-hour cycle</p>
+        <h2>Where each product layer acts across time</h2>
+      </div>
+      <p>Widths reflect duration. Product spans show where information is captured, converted into work and carried into management control.</p>
+    </div>
+    <div class="time-axis" role="list" aria-label="Operating day timeline with widths proportional to duration">
+      <div class="time-cell time-closing" role="listitem">21:00-22:00<span>closing plan</span><small>1h window</small></div>
+      <div class="time-cell time-night" role="listitem">22:00-06:00<span>night execution</span><small>8h window</small></div>
+      <div class="time-cell time-handover" role="listitem">06:00-07:00<span>handover</span><small>1h window</small></div>
+      <div class="time-cell time-morning" role="listitem">07:00-10:00<span>morning control</span><small>3h window</small></div>
+      <div class="time-cell time-trading" role="listitem">10:00-14:00<span>trading</span><small>4h window</small></div>
+      <div class="time-cell time-midday" role="listitem">14:00-15:00<span>midday handover</span><small>1h window</small></div>
+      <div class="time-cell time-evening" role="listitem">15:00-21:00<span>evening trading</span><small>6h window</small></div>
+      <div class="time-cell time-next" role="listitem">21:00-22:00<span>next handover</span><small>1h window</small></div>
+    </div>
+    <div class="product-spans" role="list" aria-label="Product layers across the operating day">
+      <div class="span-bar span-wedge" role="listitem">Wedge: Night -> Morning Handover<span>spans 21:00-07:00</span></div>
+      <div class="span-bar span-morning" role="listitem">Morning Control Layer<span>spans 06:00-10:00</span></div>
+      <div class="span-bar span-execution" role="listitem">Execution Loop<span>spans 08:00-21:00</span></div>
+      <div class="span-bar span-labour" role="listitem">Labour / Authority / Escalation Layer<span>spans 07:00-21:00</span></div>
+      <div class="span-bar span-management" role="listitem">Management &amp; Portfolio Visibility<span>spans all day + weekly</span></div>
+    </div>
+  </section>
+
+  <section class="system-panel" aria-label="Visible feedback loops">
+    <div class="system-header">
+      <div>
+        <h2>Visible Feedback Loops</h2>
+        <p>The important behavior is not the card itself, but what each signal changes next.</p>
+      </div>
+    </div>
+    <div class="loop-grid">
+      <article class="loop-card">
+        <h3 class="loop-route"><span>Execution Loop</span><span class="route-to">to</span><span>Morning Control Layer</span></h3>
+        <dl class="loop-signal"><dt>Trigger</dt><dd>blocked / partial / expired</dd><dt>Response</dt><dd>reprioritise</dd></dl>
+      </article>
+      <article class="loop-card">
+        <h3 class="loop-route"><span>Labour / Authority / Escalation Layer</span><span class="route-to">to</span><span>Execution Loop</span></h3>
+        <dl class="loop-signal"><dt>Trigger</dt><dd>checkout pull / breaks / absence</dd><dt>Response</dt><dd>reassign</dd></dl>
+      </article>
+      <article class="loop-card">
+        <h3 class="loop-route"><span>Closing / next night handover</span><span class="route-to">to</span><span>Wedge: Night -> Morning Handover</span></h3>
+        <dl class="loop-signal"><dt>Trigger</dt><dd>unresolved work</dd><dt>Response</dt><dd>next cycle</dd></dl>
+      </article>
+      <article class="loop-card">
+        <h3 class="loop-route"><span>All product layers</span><span class="route-to">to</span><span>Management &amp; Portfolio Visibility</span></h3>
+        <dl class="loop-signal"><dt>Signal</dt><dd>evidence / root cause / action items</dd><dt>Response</dt><dd>SM / AM visibility</dd></dl>
+      </article>
+    </div>
+  </section>
+
+  <section class="board" aria-label="Gorr Global operating scheme">
+    <div class="board-intro">
+      <div>
+        <h2>Product Operating Layers</h2>
+        <p>Each column is a transformation layer: it takes messy operating reality, changes its shape, and hands a cleaner signal to the next part of the system.</p>
+      </div>
+    </div>
+    <div class="lanes">
+      <article class="lane" id="lane-wedge" aria-labelledby="lane-wedge-title">
+        <p class="context"><strong>From:</strong> fragmented night memory + morning rediscovery<br><strong>To:</strong> structured night state + actionable morning handover</p>
+        <h2 class="lane-title" id="lane-wedge-title">Wedge: Night -> Morning Handover</h2>
+        <section class="state-card" aria-label="Wedge state change">
+          <div class="state">
+            <h3>State A</h3>
+            <p>Night execution exists as fragmented memory, verbal updates, paper notes, WhatsApp messages and disconnected system traces. Morning team reconstructs the store state through walks, questions and blame.</p>
+          </div>
+          <div class="arrow" aria-hidden="true"></div>
+          <div class="state">
+            <h3>State B</h3>
+            <p>Night execution becomes a structured, evidence-backed operational state that the morning team can understand, acknowledge and convert into first actions before trade risk compounds.</p>
+          </div>
+        </section>
+        <div class="tasks">
+          <div class="task-sequence-label">Steps 1-3 / establish state</div>
+          <div class="task-sequence-label">Steps 4+ / transfer and close</div>
+          <section class="task">
+            <h3>1. Receive Incoming Night Context</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>understand what is carried over from day/evening shift;</li>
+              <li>receive delivery expectations;</li>
+              <li>check staffing: planned vs actual, no-shows, agency;</li>
+              <li>understand promo, compliance and Area Manager actions;</li>
+              <li>identify known constraints before the night starts.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>The night shift should start from a clear plan of record, not from fragmented memory.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>4. Generate Morning Handover</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>summarize top risks;</li>
+              <li>list unfinished work;</li>
+              <li>explain blockers and root causes;</li>
+              <li>attach evidence links;</li>
+              <li>preserve overnight decisions and reasoning;</li>
+              <li>suggest next actions;</li>
+              <li>route items to Store Manager, Morning Shift Leader, Fresh DM, Ambient DM, Dotcom or Deputy.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>Handover must be receiver-centric: what the morning team needs to know, decide and do.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>2. Capture Night Operational Reality</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>record deliveries: cages, shorts, damages, arrival time;</li>
+              <li>track fill progress by aisle / department;</li>
+              <li>capture blockers: late delivery, missing labels, wrong stock, broken equipment;</li>
+              <li>capture cold-chain / temperature checks;</li>
+              <li>record promo changeover status;</li>
+              <li>capture date-code / waste actions;</li>
+              <li>record backroom and overstock locations;</li>
+              <li>capture safety / security incidents.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>What the night team physically knows must become structured operational state.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>5. Confirm Acknowledgement / Contest Items</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>morning manager reads the handover;</li>
+              <li>accept or contest key items;</li>
+              <li>assign ownership for unresolved work;</li>
+              <li>move accepted items into morning priorities;</li>
+              <li>preserve disputed items for follow-up.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>Close the feedback loop so "night said it was done" does not become blame without evidence.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>3. Run Final Readiness Check</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>check floor clear;</li>
+              <li>confirm cages and cardboard removed;</li>
+              <li>confirm face-up / standards;</li>
+              <li>assess readiness by department;</li>
+              <li>identify unresolved risks before opening;</li>
+              <li>mark what is ready, at risk, not ready, or unknown.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>The morning team needs to know whether the store is ready for trade, where it is not ready, and why.</p>
+            </div>
+          </section>
+        </div>
+        <section class="core">
+          <h3>Core Needs Covered</h3>
+          <ol>
+            <li>Preserve night state</li>
+            <li>Know morning readiness</li>
+            <li>Transfer unfinished work</li>
+            <li>Preserve evidence and decision context</li>
+            <li>Create ownership for first morning actions</li>
+          </ol>
+        </section>
+      </article>
+
+      <article class="lane" id="lane-morning" aria-labelledby="lane-morning-title">
+        <p class="context"><strong>From:</strong> raw morning signals + manager judgement<br><strong>To:</strong> current store state + ranked morning priorities</p>
+        <h2 class="lane-title" id="lane-morning-title">Morning Control Layer</h2>
+        <section class="state-card" aria-label="Morning control state change">
+          <div class="state">
+            <h3>State A</h3>
+            <p>Morning team has a handover, scattered reports, staffing reality and first floor observations, but still has to manually reconstruct what matters first.</p>
+          </div>
+          <div class="arrow" aria-hidden="true"></div>
+          <div class="state">
+            <h3>State B</h3>
+            <p>Morning team has a unified current store state and a ranked set of first-window priorities that can be assigned, tracked and escalated.</p>
+          </div>
+        </section>
+        <div class="tasks">
+          <div class="task-sequence-label">Steps 1-3 / establish state</div>
+          <div class="task-sequence-label">Steps 4+ / prioritise and align</div>
+          <section class="task">
+            <h3>1. Ingest Morning Handover</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>receive structured night handover;</li>
+              <li>review top risks;</li>
+              <li>review unfinished work;</li>
+              <li>check evidence and unresolved blockers;</li>
+              <li>identify contested or unclear items.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>Morning team starts with a usable operating picture, not a verbal memory dump.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>4. Identify Unknowns And Risks</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>separate confirmed problems from unknowns;</li>
+              <li>mark missing evidence;</li>
+              <li>flag high-risk blockers;</li>
+              <li>identify what needs verification;</li>
+              <li>avoid treating "no signal" as green.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>Unknown state must become visible, otherwise the store mistakes silence for control.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>2. Reconcile Live Morning Signals</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>check actual staffing vs rota;</li>
+              <li>check compliance status;</li>
+              <li>check dotcom / pick-wave pressure;</li>
+              <li>check queue / checkout readiness;</li>
+              <li>include first floor-walk observations;</li>
+              <li>identify source conflicts.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>Handover must be combined with live morning reality before decisions are made.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>5. Generate Morning Priority Stack</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>rank 3-7 priorities;</li>
+              <li>define why each matters now;</li>
+              <li>connect each priority to impact: availability, compliance, labour, customer, dotcom, safety;</li>
+              <li>define urgency;</li>
+              <li>define escalation threshold.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>Morning team needs to know what matters first, not just what happened.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>3. Build Current Store State</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>create readiness by department / zone;</li>
+              <li>mark ready, at risk, not ready, unknown;</li>
+              <li>identify open exceptions;</li>
+              <li>identify labour gaps;</li>
+              <li>identify customer / availability / compliance risk.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>The store needs one current operating picture before managers start assigning work.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>6. Align Morning Roles</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>show SM what requires intervention;</li>
+              <li>show Deputy / Duty Manager what needs movement;</li>
+              <li>show Shift Leader what to assign first;</li>
+              <li>route department-specific items to Fresh, Ambient, Checkout, Dotcom;</li>
+              <li>prepare priorities for task dispatch.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>The same morning state must become role-specific action.</p>
+            </div>
+          </section>
+        </div>
+        <section class="core">
+          <h3>Core Needs Covered</h3>
+          <ol>
+            <li>Convert handover into current state</li>
+            <li>Combine night context with live morning signals</li>
+            <li>Make unknowns visible</li>
+            <li>Rank first-window priorities</li>
+            <li>Align SM / Deputy / Shift Leader / DMs around the same picture</li>
+          </ol>
+        </section>
+      </article>
+
+      <article class="lane" id="lane-execution" aria-labelledby="lane-execution-title">
+        <p class="context"><strong>From:</strong> priorities spoken aloud<br><strong>To:</strong> work assigned, tracked and closed</p>
+        <h2 class="lane-title" id="lane-execution-title">Execution Loop</h2>
+        <section class="state-card" aria-label="Execution state change">
+          <div class="state">
+            <h3>State A</h3>
+            <p>Morning priorities exist, but work is still assigned verbally, chased manually, interrupted by live trading and verified through memory or walks.</p>
+          </div>
+          <div class="arrow" aria-hidden="true"></div>
+          <div class="state">
+            <h3>State B</h3>
+            <p>Priorities become trackable work with owners, deadlines, status, blockers, proof and carry-over, so execution state is visible during the shift.</p>
+          </div>
+        </section>
+        <div class="tasks">
+          <div class="task-sequence-label">Steps 1-3 / dispatch and track</div>
+          <div class="task-sequence-label">Steps 4+ / resolve and feed back</div>
+          <section class="task">
+            <h3>1. Convert Priorities Into Tasks</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>split each priority into concrete work;</li>
+              <li>define owner;</li>
+              <li>define location;</li>
+              <li>define deadline;</li>
+              <li>define dependency;</li>
+              <li>define required proof;</li>
+              <li>define escalation rule.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>Priorities only create value when they become executable work.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>4. Surface Blockers Early</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>capture blocker reason;</li>
+              <li>capture location;</li>
+              <li>identify who can remove blocker;</li>
+              <li>route to Shift Leader / DM / Deputy / SM;</li>
+              <li>update remaining work.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>A blocker should appear while it can still be fixed, not after the deadline has failed.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>2. Dispatch Work To Owners</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>assign tasks to Shift Leader, Department Manager, Team Leader or colleague;</li>
+              <li>support role-based assignment where exact person may change;</li>
+              <li>account for staggered arrivals;</li>
+              <li>make task context visible without repeating the morning brief.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>The right person needs to know what to do, where, by when and why.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>5. Capture Proof At The Right Level</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>self-report for low-risk work;</li>
+              <li>scan for stock / gap / pick routines;</li>
+              <li>photo for promo / standards;</li>
+              <li>checklist for safety / cleaning;</li>
+              <li>system proof for temp / queue / EPOS;</li>
+              <li>manager verification for high-risk items.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>Not all work needs the same proof, but important work needs evidence.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>3. Capture Execution Status</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>accepted;</li>
+              <li>in progress;</li>
+              <li>partial;</li>
+              <li>done;</li>
+              <li>blocked;</li>
+              <li>paused;</li>
+              <li>expired;</li>
+              <li>reassigned;</li>
+              <li>cancelled;</li>
+              <li>escalated.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>Managers need to know whether work is actually moving, not just whether it was assigned.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>6. Feed Execution Back Into Priorities</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>update current store state;</li>
+              <li>re-rank priorities if work is blocked or expired;</li>
+              <li>create new tasks if conditions change;</li>
+              <li>record checkout pull or interruption;</li>
+              <li>create carry-over if work cannot close.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>Execution must be a live loop, not an end-of-shift report.</p>
+            </div>
+          </section>
+        </div>
+        <section class="core">
+          <h3>Core Needs Covered</h3>
+          <ol>
+            <li>Convert priorities into executable work</li>
+            <li>Make task ownership visible</li>
+            <li>Track real execution state</li>
+            <li>Surface blockers early</li>
+            <li>Create proportionate proof</li>
+            <li>Preserve unfinished work as carry-over</li>
+          </ol>
+        </section>
+      </article>
+
+      <article class="lane" id="lane-labour" aria-labelledby="lane-labour-title">
+        <p class="context"><strong>From:</strong> priorities without feasibility<br><strong>To:</strong> executable trade-offs with clear authority</p>
+        <h2 class="lane-title" id="lane-labour-title">Labour / Authority / Escalation Layer</h2>
+        <section class="state-card" aria-label="Labour authority state change">
+          <div class="state">
+            <h3>State A</h3>
+            <p>Work is prioritised, but managers still rely on judgement, walking the floor and negotiation to know whether there are enough people, skills and authority to execute it.</p>
+          </div>
+          <div class="arrow" aria-hidden="true"></div>
+          <div class="state">
+            <h3>State B</h3>
+            <p>Priorities are checked against actual labour, skills, breaks, checkout pull, absence and decision rights, so trade-offs and escalations are explicit.</p>
+          </div>
+        </section>
+        <div class="tasks">
+          <div class="task-sequence-label">Steps 1-3 / establish capacity</div>
+          <div class="task-sequence-label">Steps 4+ / decide and record</div>
+          <section class="task">
+            <h3>1. Check Actual Labour vs Plan</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>compare rota vs actual attendance;</li>
+              <li>identify no-shows, sickness, agency, late arrivals;</li>
+              <li>identify who is physically available;</li>
+              <li>identify gaps by department.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>The store needs to know real capacity, not planned capacity.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>4. Clarify Authority Boundaries</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>identify what Shift Leader can decide;</li>
+              <li>identify what Deputy can decide;</li>
+              <li>identify what requires Store Manager approval;</li>
+              <li>identify what must go to AM / HR / LP / compliance;</li>
+              <li>route escalation with evidence.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>The person who owns the live problem often does not own the authority to close it.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>2. Map Skills And Coverage</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>identify checkout-trained colleagues;</li>
+              <li>identify fresh / bakery / dotcom / keyholder / PLH / first-aider coverage;</li>
+              <li>identify break pressure;</li>
+              <li>identify single points of failure.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>Labour is not interchangeable; the product must know who can actually do what.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>5. Record Trade-Offs</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>log why one priority was delayed;</li>
+              <li>log labour redeployment reason;</li>
+              <li>log accepted risk;</li>
+              <li>connect trade-off to later evidence / dashboard.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>Managers need defensible context, not just a record that something was late.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>3. Manage Checkout Pull / Redeployment</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>detect queue pressure;</li>
+              <li>identify lowest-impact redeployment options;</li>
+              <li>record who was pulled, from where, for how long;</li>
+              <li>update affected department work;</li>
+              <li>release colleagues back when possible.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>Service recovery should not invisibly break fill, fresh, dotcom or compliance.</p>
+            </div>
+          </section>
+        </div>
+        <section class="core">
+          <h3>Core Needs Covered</h3>
+          <ol>
+            <li>Know real labour capacity</li>
+            <li>Match work to skills and coverage</li>
+            <li>Make checkout pull visible</li>
+            <li>Route decisions to the right authority</li>
+            <li>Preserve trade-off context</li>
+          </ol>
+        </section>
+      </article>
+
+      <article class="lane" id="lane-management" aria-labelledby="lane-management-title">
+        <p class="context"><strong>From:</strong> scattered execution evidence<br><strong>To:</strong> role-specific control views</p>
+        <h2 class="lane-title" id="lane-management-title">Management &amp; Portfolio Visibility</h2>
+        <section class="state-card" aria-label="Management visibility state change">
+          <div class="state">
+            <h3>State A</h3>
+            <p>Store execution, evidence, blockers and actions are scattered across tasks, walks, WhatsApp, reports and manager memory.</p>
+          </div>
+          <div class="arrow" aria-hidden="true"></div>
+          <div class="state">
+            <h3>State B</h3>
+            <p>Deputy, Store Manager and Area Manager each see the right level of execution state, risk, evidence, root cause and follow-up action.</p>
+          </div>
+        </section>
+        <div class="tasks">
+          <div class="task-sequence-label">Steps 1-3 / create live visibility</div>
+          <div class="task-sequence-label">Steps 4+ / manage portfolio follow-up</div>
+          <section class="task">
+            <h3>1. Build Deputy Live View</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>show active, blocked and expired work;</li>
+              <li>show coverage gaps;</li>
+              <li>show checkout pull;</li>
+              <li>show opening / closing readiness;</li>
+              <li>show what can be solved now vs escalated.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>Deputy / Duty Manager needs to keep the shift stable in real time.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>4. Build Area Manager Portfolio View</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>compare stores in a patch;</li>
+              <li>show which stores need attention first;</li>
+              <li>show process health, not only visual standards;</li>
+              <li>show action items and evidence;</li>
+              <li>show repeated blockers and root causes;</li>
+              <li>support escalation packs.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>Area Manager needs portfolio-level control and credible root-cause context.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>2. Build Store Manager Intervention View</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>show store readiness;</li>
+              <li>show top risks;</li>
+              <li>show labour vs demand;</li>
+              <li>show compliance reds;</li>
+              <li>show availability risk;</li>
+              <li>show open exceptions;</li>
+              <li>show AM actions due;</li>
+              <li>show carry-over.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>Store Manager needs to know where to intervene, not inspect every task.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>5. Close The Follow-Up Loop</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>track action items;</li>
+              <li>assign owner and due date;</li>
+              <li>show progress;</li>
+              <li>retain evidence;</li>
+              <li>carry unresolved items into the next review.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>Management visibility only matters if agreed work actually closes.</p>
+            </div>
+          </section>
+          <section class="task">
+            <h3>3. Build Evidence Trail</h3>
+            <h4>Tasks:</h4>
+            <ul>
+              <li>link proof to task / exception;</li>
+              <li>preserve timestamps, actor, location and source;</li>
+              <li>separate strong, weak, missing and contested evidence;</li>
+              <li>support audit, compliance, HR, LP and AM needs.</li>
+            </ul>
+            <div class="need">
+              <h4>Need:</h4>
+              <p>Execution control and accountability require evidence, not recollection.</p>
+            </div>
+          </section>
+        </div>
+        <section class="core">
+          <h3>Core Needs Covered</h3>
+          <ol>
+            <li>Give Deputy live shift control</li>
+            <li>Give SM intervention visibility</li>
+            <li>Preserve evidence and accountability</li>
+            <li>Give AM portfolio-level process visibility</li>
+            <li>Close action-item follow-up</li>
+          </ol>
+        </section>
+      </article>
+    </div>
+  </section>
+
+  <section class="technology-panel" aria-labelledby="technology-title">
+    <div class="technology-header">
+      <div>
+        <p class="section-label">Reported market activity</p>
+        <h2 id="technology-title">Selected UK store technology rollouts / 2024-2026</h2>
+      </div>
+      <p>Publicly announced initiatives with stated dates, deployment scale and operating purpose. Scope and stated purpose are reproduced from the source material.</p>
+    </div>
+    <table class="technology-table">
+      <colgroup>
+        <col class="date-col">
+        <col class="retailer-col">
+        <col class="initiative-col">
+        <col class="scale-col">
+        <col>
+      </colgroup>
+      <thead>
+        <tr>
+          <th scope="col">Date</th>
+          <th scope="col">Retailer</th>
+          <th scope="col">Initiative</th>
+          <th scope="col">Publicly stated scale</th>
+          <th scope="col">Stated operating purpose</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Feb 2024</td>
+          <td>Lidl GB</td>
+          <td>Electronic shelf labels</td>
+          <td>Rollout announced for 960+ stores following trials in more than 35 stores.</td>
+          <td>Replace paper pricing, reduce manual ticket changes and release colleague time.</td>
+        </tr>
+        <tr>
+          <td>May 2025</td>
+          <td>Co-op</td>
+          <td>Electronic shelf label rollout</td>
+          <td>Nearly 2,400 stores; 1,500 targeted by end-2025 and full rollout by end-2026.</td>
+          <td>Product-information updates, operational agility and support for online order picking.</td>
+        </tr>
+        <tr>
+          <td>Oct 2025</td>
+          <td>Asda</td>
+          <td>Electronic shelf labels in Express</td>
+          <td>250 Express stores, more than 700,000 labels and 20 new sites planned with the system.</td>
+          <td>Improve on-shelf availability and simplify store operations for colleagues.</td>
+        </tr>
+        <tr>
+          <td>Oct 2025</td>
+          <td>Morrisons</td>
+          <td>Estate-wide digital pricing</td>
+          <td>10.8 million smart labels across 497 supermarkets.</td>
+          <td>Automate repetitive pricing work, improve price accuracy and support loyalty offers.</td>
+        </tr>
+        <tr>
+          <td>Mar 2026</td>
+          <td>M&amp;S</td>
+          <td>Microsoft 365 Copilot</td>
+          <td>11,000 licenses for store managers and store-support colleagues.</td>
+          <td>Support shift rotas, handovers, product availability, summaries and sales insight.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="technology-note">Sources: retailer and vendor announcements, annual reports and Gorr buyer-budget proof research. Dates refer to announcement or reporting dates.</p>
+  </section>
+</main>
+<script>
+(() => {
+  const tabs = [...document.querySelectorAll(".canvas-tab")];
+  const lanes = tabs.map((tab) => document.getElementById(tab.dataset.target));
+  const progress = document.querySelector(".canvas-progress span");
+
+  const setActive = (activeTab) => {
+    tabs.forEach((tab) => tab.setAttribute("aria-pressed", String(tab === activeTab)));
+  };
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const lane = document.getElementById(tab.dataset.target);
+      const targetLeft = window.scrollX + lane.getBoundingClientRect().left - 20;
+      setActive(tab);
+      window.scrollTo({ left: Math.max(0, targetLeft), top: window.scrollY, behavior: "smooth" });
+    });
+  });
+
+  const syncNavigation = () => {
+    const maxScroll = Math.max(1, document.documentElement.scrollWidth - window.innerWidth);
+    progress.style.transform = `scaleX(${Math.min(1, window.scrollX / maxScroll)})`;
+
+    const readingLine = Math.min(window.innerWidth * 0.36, 460);
+    let activeIndex = window.scrollX <= 24
+      ? 0
+      : window.scrollX >= maxScroll - 24
+        ? lanes.length - 1
+        : lanes.findIndex((lane) => {
+            const rect = lane.getBoundingClientRect();
+            return rect.left <= readingLine && rect.right >= readingLine;
+          });
+
+    if (activeIndex < 0) {
+      let nearestDistance = Infinity;
+      activeIndex = 0;
+      lanes.forEach((lane, index) => {
+        const rect = lane.getBoundingClientRect();
+        const distance = Math.abs((rect.left + rect.right) / 2 - readingLine);
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          activeIndex = index;
+        }
+      });
+    }
+
+    setActive(tabs[activeIndex]);
+  };
+
+  window.addEventListener("scroll", syncNavigation, { passive: true });
+  window.addEventListener("resize", syncNavigation);
+  syncNavigation();
+})();
+</script>
+</body>
+</html>
